@@ -5,6 +5,7 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
+import { getProducts } from "@/lib/products";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
@@ -45,6 +46,7 @@ function CategoryPage() {
   const { category } = Route.useLoaderData();
   const others = categories.filter((c) => c.slug !== category.slug).slice(0, 3);
   const orderMsg = `مرحباً، أود الاستفسار عن قسم: ${category.name}`;
+  const products = getProducts(category.slug);
 
   return (
     <div className="min-h-screen">
@@ -71,16 +73,41 @@ function CategoryPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12">
-          <div className="rounded-2xl border border-border bg-card p-8 text-center">
-            <h2 className="text-xl font-bold">تصاميم خاصة قيد التحديث</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              نضيف صور تصاميمنا الحقيقية قريباً. للاطلاع على أحدث الأعمال أو طلب تصميم خاص، تواصل معنا مباشرة.
-            </p>
-            <a href={waLink(orderMsg)} target="_blank" rel="noopener noreferrer"
-               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
-              <MessageCircle className="h-4 w-4" /> اطلب الآن
-            </a>
-          </div>
+          {products.length > 0 ? (
+            <>
+              <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصاميمنا</h2>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                {products.map((p) => {
+                  const msg = `مرحباً، أود طلب هذا التصميم: ${p.name} (${p.id}) من قسم ${category.name}`;
+                  return (
+                    <div key={p.id} className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary">
+                      <div className="aspect-square overflow-hidden">
+                        <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      </div>
+                      <div className="p-3">
+                        <h3 className="text-sm font-bold line-clamp-2">{p.name}</h3>
+                        <a href={waLink(msg)} target="_blank" rel="noopener noreferrer"
+                           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90">
+                          <MessageCircle className="h-4 w-4" /> اطلب هذا التصميم
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card p-8 text-center">
+              <h2 className="text-xl font-bold">تصاميم خاصة قيد التحديث</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                نضيف صور تصاميمنا الحقيقية قريباً. للاطلاع على أحدث الأعمال أو طلب تصميم خاص، تواصل معنا مباشرة.
+              </p>
+              <a href={waLink(orderMsg)} target="_blank" rel="noopener noreferrer"
+                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                <MessageCircle className="h-4 w-4" /> اطلب الآن
+              </a>
+            </div>
+          )}
         </section>
 
         <section className="mx-auto max-w-6xl px-4 pb-12">
