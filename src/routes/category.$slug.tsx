@@ -77,23 +77,28 @@ function CategoryPage() {
             <>
               <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصاميمنا</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {products.map((p) => {
-                  const msg = `مرحباً، أود طلب هذا التصميم: ${p.name} (${p.id}) من قسم ${category.name}`;
-                  return (
-                    <div key={p.id} className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary">
+                {products.map((p) => (
+                  <div key={p.id} className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary">
+                    <Link to="/product/$id" params={{ id: p.id }} className="block">
                       <div className="aspect-square overflow-hidden">
                         <img src={p.image} alt={p.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                       </div>
-                      <div className="p-3">
-                        <h3 className="text-sm font-bold line-clamp-2">{p.name}</h3>
-                        <a href={waLink(msg)} target="_blank" rel="noopener noreferrer"
-                           className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90">
-                          <MessageCircle className="h-4 w-4" /> اطلب هذا التصميم
-                        </a>
-                      </div>
+                    </Link>
+                    <div className="p-3">
+                      <Link to="/product/$id" params={{ id: p.id }} className="block">
+                        <h3 className="text-sm font-bold line-clamp-2 hover:text-primary">{p.name}</h3>
+                      </Link>
+                      <div className="mt-1 text-sm font-extrabold text-primary">{formatPrice(p)}</div>
+                      <Link
+                        to="/product/$id"
+                        params={{ id: p.id }}
+                        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:opacity-90"
+                      >
+                        عرض التفاصيل
+                      </Link>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
             </>
           ) : (
