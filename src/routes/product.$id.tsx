@@ -45,18 +45,30 @@ export const Route = createFileRoute("/product/$id")({
 
 function ProductPage() {
   const { product, category } = Route.useLoaderData();
-  const [customization, setCustomization] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [groom, setGroom] = useState("");
+  const [bride, setBride] = useState("");
+  const [date, setDate] = useState("");
+  const [colors, setColors] = useState("");
   const [notes, setNotes] = useState("");
 
+  const productUrl =
+    typeof window !== "undefined" ? window.location.href : "";
+
   const message = [
-    "مرحباً، أود طلب:",
+    "مرحباً، أود طلب المنتج التالي:",
     `• المنتج: ${product.name} (${product.id})`,
-    category ? `• القسم: ${category.name}` : null,
     `• السعر: ${formatPrice(product)}`,
-    customization.trim() ? `• اللون / الاسم: ${customization.trim()}` : null,
-    notes.trim() ? `• ملاحظات: ${notes.trim()}` : null,
+    productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+    "",
+    "تفاصيل الطلب:",
+    `• اسم العريس: ${groom.trim() || "-"}`,
+    `• اسم العروس: ${bride.trim() || "-"}`,
+    `• تاريخ المناسبة: ${date.trim() || "-"}`,
+    `• الألوان المرغوبة: ${colors.trim() || "-"}`,
+    `• ملاحظات إضافية: ${notes.trim() || "-"}`,
   ]
-    .filter(Boolean)
+    .filter((l) => l !== null)
     .join("\n");
 
   return (
@@ -68,11 +80,7 @@ function ProductPage() {
           <span>/</span>
           {category && (
             <>
-              <Link
-                to="/category/$slug"
-                params={{ slug: category.slug }}
-                className="hover:text-primary"
-              >
+              <Link to="/category/$slug" params={{ slug: category.slug }} className="hover:text-primary">
                 {category.name}
               </Link>
               <span>/</span>
@@ -84,68 +92,65 @@ function ProductPage() {
         <div className="grid gap-8 md:grid-cols-2">
           <div className="overflow-hidden rounded-2xl border border-border bg-card">
             <div className="aspect-square overflow-hidden">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="h-full w-full object-cover"
-              />
+              <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
             </div>
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl font-extrabold md:text-4xl">{product.name}</h1>
-            <div className="mt-3 text-2xl font-extrabold text-primary md:text-3xl">
+            <div className="mt-3 text-lg font-extrabold text-primary md:text-xl">
               {formatPrice(product)}
             </div>
-            <p className="mt-4 leading-relaxed text-muted-foreground">
+            <p className="mt-4 whitespace-pre-line leading-relaxed text-muted-foreground">
               {product.description}
             </p>
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <label htmlFor="customization" className="mb-2 block text-sm font-bold">
-                  اللون أو تخصيص الاسم (اختياري)
-                </label>
-                <input
-                  id="customization"
-                  type="text"
-                  value={customization}
-                  onChange={(e) => setCustomization(e.target.value)}
-                  placeholder="مثال: اللون الأبيض، أو الاسم: سارة ومحمد"
-                  className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-                />
-              </div>
+            {!showForm ? (
+              <button
+                onClick={() => setShowForm(true)}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 text-base font-bold text-primary-foreground transition hover:opacity-90"
+              >
+                اطلبه الآن
+              </button>
+            ) : (
+              <div className="mt-6 space-y-4 rounded-xl border border-border bg-card p-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="اسم العريس" value={groom} onChange={setGroom} placeholder="مثال: محمد" />
+                  <Field label="اسم العروس" value={bride} onChange={setBride} placeholder="مثال: سارة" />
+                  <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
+                  <Field label="الألوان المرغوبة" value={colors} onChange={setColors} placeholder="ذهبي / فضي / زهري / أبيض / أسود" />
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-bold">ملاحظات إضافية</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={4}
+                    placeholder="أي تفاصيل أخرى تودّ إضافتها..."
+                    className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                  />
+                </div>
 
-              <div>
-                <label htmlFor="notes" className="mb-2 block text-sm font-bold">
-                  ملاحظات إضافية (اختياري)
-                </label>
-                <textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                  placeholder="أي تفاصيل تريد إضافتها عن الطلب..."
-                  className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-                />
+                <a
+                  href={waLink(message)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 text-base font-bold text-primary-foreground transition hover:opacity-90"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  اطلبه الآن عبر واتساب
+                </a>
+                <p className="text-center text-xs text-muted-foreground">
+                  سيتم فتح واتساب مع رسالة تتضمن تفاصيل طلبك ورابط صورة المنتج.
+                </p>
               </div>
-            </div>
-
-            <a
-              href={waLink(message)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 text-base font-bold text-primary-foreground transition hover:opacity-90"
-            >
-              <MessageCircle className="h-5 w-5" />
-              اطلب عبر واتساب
-            </a>
+            )}
 
             {category && (
               <Link
                 to="/category/$slug"
                 params={{ slug: category.slug }}
-                className="mt-3 inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary"
+                className="mt-4 inline-flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-primary"
               >
                 <ArrowLeft className="h-4 w-4 rotate-180" />
                 العودة إلى {category.name}
@@ -156,6 +161,31 @@ function ProductPage() {
       </main>
       <Footer />
       <WhatsAppFloat />
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <label className="mb-2 block text-sm font-bold">{label}</label>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+      />
     </div>
   );
 }

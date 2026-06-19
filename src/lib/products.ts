@@ -14,109 +14,27 @@ export type Product = {
   categorySlug: string;
   name: string;
   image: string;
-  price: number; // 0 = "السعر عند الطلب"
-  currency: string;
+  priceNew: number; // السعر بالليرة السورية الجديدة
+  priceOld: number; // السعر بالليرة السورية القديمة
   description: string;
 };
 
-export const CURRENCY = "ل.س";
+const RING_DESC =
+  "ستاند بليكسي شفاف و (ذهبي أو فضي أو زهري أو أبيض أو أسود).\nيمكنكم تخصيصه بالأسماء و التاريخ و العبارة التي ترغبون بها.";
 
-const rings: Product[] = [
-  {
-    id: "rings-1",
-    categorySlug: "rings",
-    name: "ستاند محابس مرايا ذهبي و وردي",
-    image: ring1,
-    price: 0,
-    currency: CURRENCY,
-    description: "ستاند محابس بقاعدة مرايا فاخرة، إطار ذهبي مع لمسات وردية ناعمة، يبرز محبسك بأناقة.",
-  },
-  {
-    id: "rings-2",
-    categorySlug: "rings",
-    name: "ستاند محابس أبيض بخط ذهبي",
-    image: ring2,
-    price: 0,
-    currency: CURRENCY,
-    description: "تصميم نقي باللون الأبيض مع خط ذهبي رفيع وزخرفة كتابية أنيقة، مثالي للعروسين.",
-  },
-  {
-    id: "rings-3",
-    categorySlug: "rings",
-    name: "ستاند محابس هندسي بحروف الاسم",
-    image: ring3,
-    price: 0,
-    currency: CURRENCY,
-    description: "تصميم هندسي عصري يحمل الأحرف الأولى لاسمي العروسين بلمسة فخمة ومميزة.",
-  },
-  {
-    id: "rings-4",
-    categorySlug: "rings",
-    name: "ستاند محابس ذهبي مع وردة",
-    image: ring4,
-    price: 0,
-    currency: CURRENCY,
-    description: "قاعدة ذهبية مزينة بوردة طبيعية الشكل، تضفي رومانسية على لحظة تقديم المحبس.",
-  },
-  {
-    id: "rings-5",
-    categorySlug: "rings",
-    name: "ستاند محابس دائري بالاسم",
-    image: ring5,
-    price: 0,
-    currency: CURRENCY,
-    description: "ستاند دائري أنيق يحمل اسم العروسين بخط مميز، تذكار يبقى بعد الفرح.",
-  },
-  {
-    id: "rings-6",
-    categorySlug: "rings",
-    name: "ستاند محابس فخم باللون الذهبي",
-    image: ring6,
-    price: 0,
-    currency: CURRENCY,
-    description: "تصميم فاخر بالكامل باللون الذهبي، يليق بالجلسات الرسمية وحفلات الخطبة الكبرى.",
-  },
-  {
-    id: "rings-7",
-    categorySlug: "rings",
-    name: "ستاند محابس خشبي كلاسيكي",
-    image: ring7,
-    price: 0,
-    currency: CURRENCY,
-    description: "قاعدة خشبية بلمسة كلاسيكية دافئة، مزج بين الطبيعة والأناقة لطلتك المميزة.",
-  },
-  {
-    id: "rings-8",
-    categorySlug: "rings",
-    name: "ستاند محابس دائرة ذهبية",
-    image: ring8,
-    price: 0,
-    currency: CURRENCY,
-    description: "حلقة ذهبية مرفوعة على قاعدة راقية، تصميم بسيط وجريء في آن واحد.",
-  },
-  {
-    id: "rings-9",
-    categorySlug: "rings",
-    name: "ستاند محابس مرايا مع ورد أبيض",
-    image: ring9,
-    price: 0,
-    currency: CURRENCY,
-    description: "مرايا عاكسة محاطة بورد أبيض ناعم، يبرز المحابس وكأنها في لوحة فنية.",
-  },
-  {
-    id: "rings-10",
-    categorySlug: "rings",
-    name: "ستاند محابس طوق ذهبي",
-    image: ring10,
-    price: 0,
-    currency: CURRENCY,
-    description: "تصميم على شكل طوق ذهبي أنيق يلتف حول المحابس، فخامة بلمسة عصرية.",
-  },
-];
+const ringImages = [ring1, ring2, ring3, ring4, ring5, ring6, ring7, ring8, ring9, ring10];
 
-export const productsByCategory: Record<string, Product[]> = {
-  rings,
-};
+const rings: Product[] = ringImages.map((img, i) => ({
+  id: `rings-${i + 1}`,
+  categorySlug: "rings",
+  name: `ستاند محابس — تصميم ${i + 1}`,
+  image: img,
+  priceNew: 2500,
+  priceOld: 250000,
+  description: RING_DESC,
+}));
+
+export const productsByCategory: Record<string, Product[]> = { rings };
 
 export const allProducts: Product[] = Object.values(productsByCategory).flat();
 
@@ -126,4 +44,4 @@ export const getProduct = (id: string): Product | undefined =>
   allProducts.find((p) => p.id === id);
 
 export const formatPrice = (p: Product): string =>
-  p.price > 0 ? `${p.price.toLocaleString("ar")} ${p.currency}` : "السعر عند الطلب";
+  `${p.priceNew.toLocaleString("ar")} ل.س جديدة • ${p.priceOld.toLocaleString("ar")} ل.س قديمة`;
