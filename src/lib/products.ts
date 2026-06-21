@@ -23,16 +23,16 @@ const RING_DESC =
   "ستاند بليكسي شفاف و (ذهبي أو فضي أو زهري أو أبيض أو أسود).\nيمكنكم تخصيصه بالأسماء و التاريخ و العبارة التي ترغبون بها.";
 
 const rings: Product[] = [
-  { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
-  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
-  { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس — تصميم 3",  image: ring3,  priceNew: 2000, priceOld: 200000, description: RING_DESC },
-  { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس — تصميم 4",  image: ring4,  priceNew: 3000, priceOld: 300000, description: RING_DESC },
+  { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING_DESC },
+  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
+  { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس — تصميم 3",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
+  { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس — تصميم 4",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-5",  categorySlug: "rings", name: "ستاند محابس — تصميم 5",  image: ring5,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
-  { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس — تصميم 6",  image: ring6,  priceNew: 1250, priceOld: 125000, description: RING_DESC },
-  { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
-  { id: "rings-8",  categorySlug: "rings", name: "ستاند محابس — تصميم 8",  image: ring8,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
+  { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس — تصميم 6",  image: ring6,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
+  { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING_DESC },
+  { id: "rings-8",  categorySlug: "rings", name: "ستاند محابس — تصميم 8",  image: ring8,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس — تصميم 9",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
-  { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2250, priceOld: 225000, description: RING_DESC },
+  { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2500, priceOld: 250000, description: RING_DESC },
 ];
 
 export const productsByCategory: Record<string, Product[]> = { rings };
