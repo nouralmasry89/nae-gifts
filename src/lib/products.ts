@@ -25,9 +25,12 @@ const RING_DESC =
 const RING1_DESC =
   "ستاند بليكسي أسود القاعدة والأبراج باللونين الذهبي لخاتم العريس والزهري لخاتم العروس مع عبارة وتاريخ باللون الفضي.\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
+const RING2_DESC =
+  "ستاند بليكسي (أبيض أو أسود) مع بليكسي ذهبي أو فضي، والقطعة الخلفية يمكنكم تخصيصها بالشكل الذي ترغبون به (خريطة، قلب، أحرف، شكل عروسين…).\nيمكنكم تخصيص الستاند بالأسماء والتاريخ والعبارات التي ترغبون بها.";
+
 const rings: Product[] = [
   { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
-  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
+  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
   { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس — تصميم 3",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس — تصميم 4",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-5",  categorySlug: "rings", name: "ستاند محابس — تصميم 5",  image: ring5,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
