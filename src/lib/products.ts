@@ -34,6 +34,9 @@ const RING5_DESC =
 const RING6_DESC =
   "ستاند بليكسي أبيض أو أسود و (ذهبي أو فضي).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
+const RING8_DESC =
+  "ستاند بليكسي أبيض أو أسود و (ذهبي أو فضي).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
+
 const rings: Product[] = [
   { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
   { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
