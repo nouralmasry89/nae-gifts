@@ -34,6 +34,9 @@ const RING5_DESC =
 const RING6_DESC =
   "ستاند بليكسي أبيض أو أسود و (ذهبي أو فضي).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
+const RING7_DESC =
+  "ستاند خشبي (أبيض أو أسود بني أو بيج).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
+
 const RING8_DESC =
   "ستاند بليكسي أبيض أو أسود و (ذهبي أو فضي).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
@@ -44,7 +47,7 @@ const rings: Product[] = [
   { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس — تصميم 4",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-5",  categorySlug: "rings", name: "ستاند محابس — تصميم 5",  image: ring5,  priceNew: 2250, priceOld: 225000, description: RING5_DESC },
   { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس — تصميم 6",  image: ring6,  priceNew: 2500, priceOld: 250000, description: RING6_DESC },
-  { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING_DESC },
+  { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING7_DESC },
   { id: "rings-8",  categorySlug: "rings", name: "ستاند محابس — تصميم 8",  image: ring8,  priceNew: 2500, priceOld: 250000, description: RING8_DESC },
   { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس — تصميم 9",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
   { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2500, priceOld: 250000, description: RING_DESC },
