@@ -69,8 +69,29 @@ export const allProducts: Product[] = Object.values(productsByCategory).flat();
 
 export const getProducts = (slug: string): Product[] => productsByCategory[slug] ?? [];
 
+const DOWRY_DESC =
+  "صناديق المهر متوفرة بمواد وتصاميم متنوعة (خشب — بليكسي — خشب مع غطاء بليكسي…).\nتختلف الأسعار حسب حجم الصندوق.\nيمكنكم تخصيصها بالأسماء والتاريخ والعبارة التي ترغبون بها.";
+
+const dowry: Product[] = [
+  { id: "dowry-1", categorySlug: "dowry", name: "صندوق مهر — تصميم 1", image: dowry1, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-2", categorySlug: "dowry", name: "صندوق مهر — تصميم 2", image: dowry2, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-3", categorySlug: "dowry", name: "صندوق مهر — تصميم 3", image: dowry3, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-4", categorySlug: "dowry", name: "صندوق مهر — تصميم 4", image: dowry4, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-5", categorySlug: "dowry", name: "صندوق مهر — تصميم 5", image: dowry5, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-6", categorySlug: "dowry", name: "صندوق مهر — تصميم 6", image: dowry6, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  { id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 7", image: dowry7, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+];
+
+export const productsByCategory: Record<string, Product[]> = { rings, dowry };
+
+export const allProducts: Product[] = Object.values(productsByCategory).flat();
+
+export const getProducts = (slug: string): Product[] => productsByCategory[slug] ?? [];
+
 export const getProduct = (id: string): Product | undefined =>
   allProducts.find((p) => p.id === id);
 
 export const formatPrice = (p: Product): string =>
-  `${p.priceNew.toLocaleString("ar")} ل.س جديدة • ${p.priceOld.toLocaleString("ar")} ل.س قديمة`;
+  p.priceNew === 0
+    ? "السعر حسب الحجم — تواصل معنا"
+    : `${p.priceNew.toLocaleString("ar")} ل.س جديدة • ${p.priceOld.toLocaleString("ar")} ل.س قديمة`;
