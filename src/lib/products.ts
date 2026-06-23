@@ -8,6 +8,13 @@ import ring7 from "@/assets/products/rings/ring-7.jpg";
 import ring8 from "@/assets/products/rings/ring-8.jpg";
 import ring9 from "@/assets/products/rings/ring-9.jpg";
 import ring10 from "@/assets/products/rings/ring-10.jpg";
+import dowry1 from "@/assets/products/dowry/dowry-1.jpg";
+import dowry2 from "@/assets/products/dowry/dowry-2.jpg";
+import dowry3 from "@/assets/products/dowry/dowry-3.jpg";
+import dowry4 from "@/assets/products/dowry/dowry-4.jpg";
+import dowry5 from "@/assets/products/dowry/dowry-5.jpg";
+import dowry6 from "@/assets/products/dowry/dowry-6.jpg";
+import dowry7 from "@/assets/products/dowry/dowry-7.jpg";
 
 export type Product = {
   id: string;
