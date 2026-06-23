@@ -46,16 +46,20 @@ export const Route = createFileRoute("/product/$id")({
 function ProductPage() {
   const { product, category } = Route.useLoaderData();
   const [showForm, setShowForm] = useState(false);
+  const isDowry = product.categorySlug === "dowry";
+
   const [groom, setGroom] = useState("");
   const [bride, setBride] = useState("");
   const [date, setDate] = useState("");
   const [colors, setColors] = useState("");
+  const [boxType, setBoxType] = useState("");
+  const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
 
   const productUrl =
     typeof window !== "undefined" ? window.location.href : "";
 
-  const message = [
+  const baseLines = [
     "مرحباً، أود طلب المنتج التالي:",
     `• المنتج: ${product.name} (${product.id})`,
     `• السعر: ${formatPrice(product)}`,
@@ -64,10 +68,19 @@ function ProductPage() {
     "تفاصيل الطلب:",
     `• اسم العريس: ${groom.trim() || "-"}`,
     `• اسم العروس: ${bride.trim() || "-"}`,
-    `• تاريخ المناسبة: ${date.trim() || "-"}`,
-    `• الألوان المرغوبة: ${colors.trim() || "-"}`,
-    `• ملاحظات إضافية: ${notes.trim() || "-"}`,
-  ]
+  ];
+
+  const detailLines = isDowry
+    ? [
+        `• نوع الصندوق: ${boxType.trim() || "-"}`,
+        `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
+      ]
+    : [
+        `• تاريخ المناسبة: ${date.trim() || "-"}`,
+        `• الألوان المرغوبة: ${colors.trim() || "-"}`,
+      ];
+
+  const message = [...baseLines, ...detailLines, `• ملاحظات إضافية: ${notes.trim() || "-"}`]
     .filter((l) => l !== null)
     .join("\n");
 
@@ -117,8 +130,34 @@ function ProductPage() {
                 <div className="grid gap-4 md:grid-cols-2">
                   <Field label="اسم العريس" value={groom} onChange={setGroom} placeholder="مثال: محمد" />
                   <Field label="اسم العروس" value={bride} onChange={setBride} placeholder="مثال: سارة" />
-                  <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
-                  <Field label="الألوان المرغوبة" value={colors} onChange={setColors} placeholder="ذهبي / فضي / زهري / أبيض / أسود" />
+                  {isDowry ? (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-sm font-bold">نوع الصندوق</label>
+                        <select
+                          value={boxType}
+                          onChange={(e) => setBoxType(e.target.value)}
+                          className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                        >
+                          <option value="">اختر نوع الصندوق</option>
+                          <option value="خشب">خشب</option>
+                          <option value="بليكسي شفاف">بليكسي شفاف</option>
+                          <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
+                        </select>
+                      </div>
+                      <Field
+                        label="حجم الصندوق / عدد الرزم"
+                        value={boxSize}
+                        onChange={setBoxSize}
+                        placeholder="مثال: وسط — 10 رزم"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
+                      <Field label="الألوان المرغوبة" value={colors} onChange={setColors} placeholder="ذهبي / فضي / زهري / أبيض / أسود" />
+                    </>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-bold">ملاحظات إضافية</label>
@@ -138,7 +177,7 @@ function ProductPage() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 text-base font-bold text-primary-foreground transition hover:opacity-90"
                 >
                   <MessageCircle className="h-5 w-5" />
-                  اطلبه الآن عبر واتساب
+                  إرسال الطلب عبر واتساب
                 </a>
                 <p className="text-center text-xs text-muted-foreground">
                   سيتم فتح واتساب مع رسالة تتضمن تفاصيل طلبك ورابط صورة المنتج.
@@ -164,6 +203,7 @@ function ProductPage() {
     </div>
   );
 }
+
 
 function Field({
   label,
