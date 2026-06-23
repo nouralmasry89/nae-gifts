@@ -63,11 +63,6 @@ const rings: Product[] = [
   { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2500, priceOld: 250000, description: RING_DESC },
 ];
 
-export const productsByCategory: Record<string, Product[]> = { rings };
-
-export const allProducts: Product[] = Object.values(productsByCategory).flat();
-
-export const getProducts = (slug: string): Product[] => productsByCategory[slug] ?? [];
 
 const DOWRY_DESC =
   "صناديق المهر متوفرة بمواد وتصاميم متنوعة (خشب — بليكسي — خشب مع غطاء بليكسي…).\nتختلف الأسعار حسب حجم الصندوق.\nيمكنكم تخصيصها بالأسماء والتاريخ والعبارة التي ترغبون بها.";
