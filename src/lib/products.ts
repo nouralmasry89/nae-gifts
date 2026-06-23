@@ -40,6 +40,9 @@ const RING7_DESC =
 const RING8_DESC =
   "ستاند بليكسي أبيض أو أسود و (ذهبي أو فضي).\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
+const RING9_DESC =
+  "ستاند مرايا (مصنوع من الزجاج وليس البليكسي) مع حفر الأسماء والتاريخ والعبارة على المرايا بشكل مباشر.\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
+
 const rings: Product[] = [
   { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
   { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
@@ -49,7 +52,7 @@ const rings: Product[] = [
   { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس — تصميم 6",  image: ring6,  priceNew: 2500, priceOld: 250000, description: RING6_DESC },
   { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING7_DESC },
   { id: "rings-8",  categorySlug: "rings", name: "ستاند محابس — تصميم 8",  image: ring8,  priceNew: 2500, priceOld: 250000, description: RING8_DESC },
-  { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس — تصميم 9",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING_DESC },
+  { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس — تصميم 9",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING9_DESC },
   { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2500, priceOld: 250000, description: RING_DESC },
 ];
 
