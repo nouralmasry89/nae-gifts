@@ -15,6 +15,10 @@ import dowry4 from "@/assets/products/dowry/dowry-4.jpg";
 import dowry5 from "@/assets/products/dowry/dowry-5.jpg";
 import dowry6 from "@/assets/products/dowry/dowry-6.jpg";
 import dowry7 from "@/assets/products/dowry/dowry-7.jpg";
+import flower1 from "@/assets/products/flowers/flower-1.jpg";
+import flower2 from "@/assets/products/flowers/flower-2.jpg";
+import flower3 from "@/assets/products/flowers/flower-3.jpg";
+import flower4 from "@/assets/products/flowers/flower-4.jpg";
 
 export type Product = {
   id: string;
@@ -77,7 +81,17 @@ const dowry: Product[] = [
   { id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 7", image: dowry7, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
 ];
 
-export const productsByCategory: Record<string, Product[]> = { rings, dowry };
+const FLOWERS_DESC =
+  "باقات ورد صناعي راقية تدوم طويلاً، بتنسيقات وألوان حسب رغبتك.\nيمكنكم تخصيصها بالألوان والحجم والتغليف الذي ترغبون به.";
+
+const flowers: Product[] = [
+  { id: "flowers-1", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 1", image: flower1, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+  { id: "flowers-2", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 2", image: flower2, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+  { id: "flowers-3", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 3", image: flower3, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+  { id: "flowers-4", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 4", image: flower4, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+];
+
+export const productsByCategory: Record<string, Product[]> = { rings, dowry, flowers };
 
 export const allProducts: Product[] = Object.values(productsByCategory).flat();
 
