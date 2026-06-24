@@ -84,12 +84,22 @@ const dowry: Product[] = [
 const FLOWERS_DESC =
   "باقات ورد صناعي راقية تدوم طويلاً، بتنسيقات وألوان حسب رغبتك.\nيمكنكم تخصيصها بالألوان والحجم والتغليف الذي ترغبون به.";
 
+const FLOWERS1_DESC =
+  "باقات من الورد الصناعي شبيه بالطبيعي بنسبة مئة بالمئة.\nسعر الباقة حسب عدد الورود — يمكنكم حساب سعر الباقة والطلب من خلال الجدول التالي:";
+
 const flowers: Product[] = [
-  { id: "flowers-1", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 1", image: flower1, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+  { id: "flowers-1", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 1", image: flower1, priceNew: 0, priceOld: 0, description: FLOWERS1_DESC },
   { id: "flowers-2", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 2", image: flower2, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
   { id: "flowers-3", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 3", image: flower3, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
   { id: "flowers-4", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 4", image: flower4, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
 ];
+
+export const FLOWER_PRICING = {
+  perRose: 60,
+  ribbon: 100,
+  wrapping: 150,
+  colors: ["أبيض", "أحمر", "خمري", "زهري", "أزرق", "أصفر", "موڤ"],
+};
 
 export const productsByCategory: Record<string, Product[]> = { rings, dowry, flowers };
 
