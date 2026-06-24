@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { MessageCircle, Sparkles, Heart, Gift } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
@@ -47,20 +47,6 @@ function Index() {
           </div>
         </section>
 
-        {/* Features */}
-        <section className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-3">
-          {[
-            { icon: Sparkles, title: "تصاميم فريدة", desc: "كل قطعة مصممة بعناية لتكون مميزة." },
-            { icon: Heart, title: "حسب رغبتك", desc: "نخصص الألوان والأسماء والتفاصيل لك." },
-            { icon: Gift, title: "لكل المناسبات", desc: "أعراس، أعياد، تخرج، مواليد والمزيد." },
-          ].map((f) => (
-            <div key={f.title} className="rounded-xl border border-border bg-card p-5">
-              <f.icon className="h-7 w-7 text-primary" />
-              <h3 className="mt-3 font-bold">{f.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
-            </div>
-          ))}
-        </section>
 
         {/* Categories */}
         <section id="categories" className="mx-auto max-w-6xl px-4 py-10">
