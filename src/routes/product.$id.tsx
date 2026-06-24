@@ -74,6 +74,7 @@ function ProductPage() {
     ? [
         `• نوع الصندوق: ${boxType.trim() || "-"}`,
         `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
+        `• تاريخ المناسبة: ${date.trim() || "-"}`,
       ]
     : [
         `• تاريخ المناسبة: ${date.trim() || "-"}`,
@@ -151,6 +152,7 @@ function ProductPage() {
                         onChange={setBoxSize}
                         placeholder="مثال: وسط — 10 رزم"
                       />
+                      <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
                     </>
                   ) : (
                     <>
