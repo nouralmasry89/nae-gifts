@@ -47,6 +47,7 @@ function ProductPage() {
   const { product, category } = Route.useLoaderData();
   const [showForm, setShowForm] = useState(false);
   const isDowry = product.categorySlug === "dowry";
+  const isFlower1 = product.id === "flowers-1";
 
   const [groom, setGroom] = useState("");
   const [bride, setBride] = useState("");
