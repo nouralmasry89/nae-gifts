@@ -57,21 +57,46 @@ function ProductPage() {
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Flowers-1 specific state
+  const [roseCount, setRoseCount] = useState<number>(12);
+  const [roseColor, setRoseColor] = useState<string>(FLOWER_PRICING.colors[0]);
+  const [ribbonText, setRibbonText] = useState("");
+
+  const rosesTotal = Math.max(0, roseCount) * FLOWER_PRICING.perRose;
+  const ribbonTotal = ribbonText.trim() ? FLOWER_PRICING.ribbon : 0;
+  const flowerTotal = rosesTotal + ribbonTotal + FLOWER_PRICING.wrapping;
+
   const productUrl =
     typeof window !== "undefined" ? window.location.href : "";
 
-  const baseLines = [
-    "مرحباً، أود طلب المنتج التالي:",
-    `• المنتج: ${product.name} (${product.id})`,
-    `• السعر: ${formatPrice(product)}`,
-    productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
-    "",
-    "تفاصيل الطلب:",
-    `• اسم العريس: ${groom.trim() || "-"}`,
-    `• اسم العروس: ${bride.trim() || "-"}`,
-  ];
+  const baseLines = isFlower1
+    ? [
+        "مرحباً، أود طلب المنتج التالي:",
+        `• المنتج: ${product.name} (${product.id})`,
+        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+        "",
+        "تفاصيل الطلب:",
+      ]
+    : [
+        "مرحباً، أود طلب المنتج التالي:",
+        `• المنتج: ${product.name} (${product.id})`,
+        `• السعر: ${formatPrice(product)}`,
+        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+        "",
+        "تفاصيل الطلب:",
+        `• اسم العريس: ${groom.trim() || "-"}`,
+        `• اسم العروس: ${bride.trim() || "-"}`,
+      ];
 
-  const detailLines = isDowry
+  const detailLines = isFlower1
+    ? [
+        `• عدد الورود: ${roseCount} × ${FLOWER_PRICING.perRose} ل.س = ${rosesTotal.toLocaleString("ar")} ل.س`,
+        `• لون الورد: ${roseColor}`,
+        `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
+        `• التغليف: ${FLOWER_PRICING.wrapping} ل.س`,
+        `• الكلفة الإجمالية: ${flowerTotal.toLocaleString("ar")} ل.س`,
+      ]
+    : isDowry
     ? [
         `• نوع الصندوق: ${boxType.trim() || "-"}`,
         `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
