@@ -4,7 +4,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { getProduct, formatPrice } from "@/lib/products";
+import { getProduct, formatPrice, FLOWER_PRICING } from "@/lib/products";
 import { getCategory, waLink } from "@/lib/categories";
 
 export const Route = createFileRoute("/product/$id")({
@@ -47,6 +47,7 @@ function ProductPage() {
   const { product, category } = Route.useLoaderData();
   const [showForm, setShowForm] = useState(false);
   const isDowry = product.categorySlug === "dowry";
+  const isFlower1 = product.id === "flowers-1";
 
   const [groom, setGroom] = useState("");
   const [bride, setBride] = useState("");
@@ -56,21 +57,46 @@ function ProductPage() {
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Flowers-1 specific state
+  const [roseCount, setRoseCount] = useState<number>(12);
+  const [roseColor, setRoseColor] = useState<string>(FLOWER_PRICING.colors[0]);
+  const [ribbonText, setRibbonText] = useState("");
+
+  const rosesTotal = Math.max(0, roseCount) * FLOWER_PRICING.perRose;
+  const ribbonTotal = ribbonText.trim() ? FLOWER_PRICING.ribbon : 0;
+  const flowerTotal = rosesTotal + ribbonTotal + FLOWER_PRICING.wrapping;
+
   const productUrl =
     typeof window !== "undefined" ? window.location.href : "";
 
-  const baseLines = [
-    "مرحباً، أود طلب المنتج التالي:",
-    `• المنتج: ${product.name} (${product.id})`,
-    `• السعر: ${formatPrice(product)}`,
-    productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
-    "",
-    "تفاصيل الطلب:",
-    `• اسم العريس: ${groom.trim() || "-"}`,
-    `• اسم العروس: ${bride.trim() || "-"}`,
-  ];
+  const baseLines = isFlower1
+    ? [
+        "مرحباً، أود طلب المنتج التالي:",
+        `• المنتج: ${product.name} (${product.id})`,
+        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+        "",
+        "تفاصيل الطلب:",
+      ]
+    : [
+        "مرحباً، أود طلب المنتج التالي:",
+        `• المنتج: ${product.name} (${product.id})`,
+        `• السعر: ${formatPrice(product)}`,
+        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+        "",
+        "تفاصيل الطلب:",
+        `• اسم العريس: ${groom.trim() || "-"}`,
+        `• اسم العروس: ${bride.trim() || "-"}`,
+      ];
 
-  const detailLines = isDowry
+  const detailLines = isFlower1
+    ? [
+        `• عدد الورود: ${roseCount} × ${FLOWER_PRICING.perRose} ل.س = ${rosesTotal.toLocaleString("ar")} ل.س`,
+        `• لون الورد: ${roseColor}`,
+        `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
+        `• التغليف: ${FLOWER_PRICING.wrapping} ل.س`,
+        `• الكلفة الإجمالية: ${flowerTotal.toLocaleString("ar")} ل.س`,
+      ]
+    : isDowry
     ? [
         `• نوع الصندوق: ${boxType.trim() || "-"}`,
         `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
@@ -128,39 +154,107 @@ function ProductPage() {
               </button>
             ) : (
               <div className="mt-6 space-y-4 rounded-xl border border-border bg-card p-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="اسم العريس" value={groom} onChange={setGroom} placeholder="مثال: محمد" />
-                  <Field label="اسم العروس" value={bride} onChange={setBride} placeholder="مثال: سارة" />
-                  {isDowry ? (
-                    <>
-                      <div>
-                        <label className="mb-2 block text-sm font-bold">نوع الصندوق</label>
-                        <select
-                          value={boxType}
-                          onChange={(e) => setBoxType(e.target.value)}
-                          className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-                        >
-                          <option value="">اختر نوع الصندوق</option>
-                          <option value="خشب">خشب</option>
-                          <option value="بليكسي شفاف">بليكسي شفاف</option>
-                          <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
-                        </select>
-                      </div>
-                      <Field
-                        label="حجم الصندوق / عدد الرزم"
-                        value={boxSize}
-                        onChange={setBoxSize}
-                        placeholder="مثال: وسط — 10 رزم"
-                      />
-                      <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
-                    </>
-                  ) : (
-                    <>
-                      <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
-                      <Field label="الألوان المرغوبة" value={colors} onChange={setColors} placeholder="ذهبي / فضي / زهري / أبيض / أسود" />
-                    </>
-                  )}
-                </div>
+                {isFlower1 ? (
+                  <>
+                    <div className="overflow-hidden rounded-lg border border-border">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/60 text-right">
+                          <tr>
+                            <th className="p-2 font-bold">البند</th>
+                            <th className="p-2 font-bold">اختيارك</th>
+                            <th className="p-2 font-bold">التكلفة (ل.س)</th>
+                          </tr>
+                        </thead>
+                        <tbody className="text-right">
+                          <tr className="border-t border-border">
+                            <td className="p-2 font-medium">عدد الورود</td>
+                            <td className="p-2">
+                              <input
+                                type="number"
+                                min={1}
+                                value={roseCount}
+                                onChange={(e) => setRoseCount(Math.max(1, Number(e.target.value) || 0))}
+                                className="w-24 rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
+                              />
+                              <span className="mr-2 text-xs text-muted-foreground">× {FLOWER_PRICING.perRose} ل.س</span>
+                            </td>
+                            <td className="p-2 font-bold">{rosesTotal.toLocaleString("ar")}</td>
+                          </tr>
+                          <tr className="border-t border-border">
+                            <td className="p-2 font-medium">لون الورد</td>
+                            <td className="p-2" colSpan={2}>
+                              <select
+                                value={roseColor}
+                                onChange={(e) => setRoseColor(e.target.value)}
+                                className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
+                              >
+                                {FLOWER_PRICING.colors.map((c) => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                          <tr className="border-t border-border">
+                            <td className="p-2 font-medium">عبارة على شريط الساتان</td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={ribbonText}
+                                onChange={(e) => setRibbonText(e.target.value)}
+                                placeholder="اتركها فارغة إن لم ترغب بشريط"
+                                className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
+                              />
+                            </td>
+                            <td className="p-2 font-bold">{ribbonTotal.toLocaleString("ar")}</td>
+                          </tr>
+                          <tr className="border-t border-border">
+                            <td className="p-2 font-medium">التغليف</td>
+                            <td className="p-2 text-xs text-muted-foreground">يُحتسب تلقائياً</td>
+                            <td className="p-2 font-bold">{FLOWER_PRICING.wrapping.toLocaleString("ar")}</td>
+                          </tr>
+                          <tr className="border-t-2 border-primary/40 bg-primary/5">
+                            <td className="p-3 font-extrabold" colSpan={2}>الكلفة الإجمالية</td>
+                            <td className="p-3 text-lg font-extrabold text-primary">{flowerTotal.toLocaleString("ar")} ل.س</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="اسم العريس" value={groom} onChange={setGroom} placeholder="مثال: محمد" />
+                    <Field label="اسم العروس" value={bride} onChange={setBride} placeholder="مثال: سارة" />
+                    {isDowry ? (
+                      <>
+                        <div>
+                          <label className="mb-2 block text-sm font-bold">نوع الصندوق</label>
+                          <select
+                            value={boxType}
+                            onChange={(e) => setBoxType(e.target.value)}
+                            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                          >
+                            <option value="">اختر نوع الصندوق</option>
+                            <option value="خشب">خشب</option>
+                            <option value="بليكسي شفاف">بليكسي شفاف</option>
+                            <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
+                          </select>
+                        </div>
+                        <Field
+                          label="حجم الصندوق / عدد الرزم"
+                          value={boxSize}
+                          onChange={setBoxSize}
+                          placeholder="مثال: وسط — 10 رزم"
+                        />
+                        <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
+                      </>
+                    ) : (
+                      <>
+                        <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
+                        <Field label="الألوان المرغوبة" value={colors} onChange={setColors} placeholder="ذهبي / فضي / زهري / أبيض / أسود" />
+                      </>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="mb-2 block text-sm font-bold">ملاحظات إضافية</label>
                   <textarea
@@ -171,6 +265,7 @@ function ProductPage() {
                     className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                   />
                 </div>
+
 
                 <a
                   href={waLink(message)}
