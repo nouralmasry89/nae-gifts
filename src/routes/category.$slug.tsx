@@ -6,6 +6,7 @@ import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
 import { getProducts, formatPrice } from "@/lib/products";
+import { motherSubs } from "@/lib/motherSubs";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
