@@ -47,7 +47,9 @@ function ProductPage() {
   const { product, category } = Route.useLoaderData();
   const [showForm, setShowForm] = useState(false);
   const isDowry = product.categorySlug === "dowry";
-  const isFlower1 = product.id === "flowers-1";
+  const isFlowerRose = product.id === "flowers-1" || product.id === "flowers-2";
+  const bouquetPrice = FLOWER_BOUQUET_PRICE[product.id];
+  const isFlowerBouquet = bouquetPrice !== undefined;
 
   const [groom, setGroom] = useState("");
   const [bride, setBride] = useState("");
@@ -57,7 +59,7 @@ function ProductPage() {
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
 
-  // Flowers-1 specific state
+  // Flowers rose-form state
   const [roseCount, setRoseCount] = useState<number>(12);
   const [roseColor, setRoseColor] = useState<string>(FLOWER_PRICING.colors[0]);
   const [ribbonText, setRibbonText] = useState("");
@@ -65,36 +67,44 @@ function ProductPage() {
   const rosesTotal = Math.max(0, roseCount) * FLOWER_PRICING.perRose;
   const ribbonTotal = ribbonText.trim() ? FLOWER_PRICING.ribbon : 0;
   const flowerTotal = rosesTotal + ribbonTotal + FLOWER_PRICING.wrapping;
+  const bouquetTotal = (bouquetPrice ?? 0) + ribbonTotal;
 
   const productUrl =
     typeof window !== "undefined" ? window.location.href : "";
 
-  const baseLines = isFlower1
-    ? [
-        "مرحباً، أود طلب المنتج التالي:",
-        `• المنتج: ${product.name} (${product.id})`,
-        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
-        "",
-        "تفاصيل الطلب:",
-      ]
-    : [
-        "مرحباً، أود طلب المنتج التالي:",
-        `• المنتج: ${product.name} (${product.id})`,
-        `• السعر: ${formatPrice(product)}`,
-        productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
-        "",
-        "تفاصيل الطلب:",
-        `• اسم العريس: ${groom.trim() || "-"}`,
-        `• اسم العروس: ${bride.trim() || "-"}`,
-      ];
+  const baseLines =
+    isFlowerRose || isFlowerBouquet
+      ? [
+          "مرحباً، أود طلب المنتج التالي:",
+          `• المنتج: ${product.name} (${product.id})`,
+          productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+          "",
+          "تفاصيل الطلب:",
+        ]
+      : [
+          "مرحباً، أود طلب المنتج التالي:",
+          `• المنتج: ${product.name} (${product.id})`,
+          `• السعر: ${formatPrice(product)}`,
+          productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
+          "",
+          "تفاصيل الطلب:",
+          `• اسم العريس: ${groom.trim() || "-"}`,
+          `• اسم العروس: ${bride.trim() || "-"}`,
+        ];
 
-  const detailLines = isFlower1
+  const detailLines = isFlowerRose
     ? [
         `• عدد الورود: ${roseCount} × ${FLOWER_PRICING.perRose} ل.س = ${rosesTotal.toLocaleString("ar")} ل.س`,
         `• لون الورد: ${roseColor}`,
         `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
         `• التغليف: ${FLOWER_PRICING.wrapping} ل.س`,
         `• الكلفة الإجمالية: ${flowerTotal.toLocaleString("ar")} ل.س`,
+      ]
+    : isFlowerBouquet
+    ? [
+        `• سعر الباقة: ${(bouquetPrice ?? 0).toLocaleString("ar")} ل.س`,
+        `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
+        `• الكلفة الإجمالية: ${bouquetTotal.toLocaleString("ar")} ل.س`,
       ]
     : isDowry
     ? [
