@@ -164,7 +164,7 @@ function ProductPage() {
               </button>
             ) : (
               <div className="mt-6 space-y-4 rounded-xl border border-border bg-card p-4">
-                {isFlower1 ? (
+                {isFlowerRose ? (
                   <>
                     <div className="overflow-hidden rounded-lg border border-border">
                       <table className="w-full text-sm">
@@ -230,6 +230,42 @@ function ProductPage() {
                       </table>
                     </div>
                   </>
+                ) : isFlowerBouquet ? (
+                  <div className="overflow-hidden rounded-lg border border-border">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/60 text-right">
+                        <tr>
+                          <th className="p-2 font-bold">البند</th>
+                          <th className="p-2 font-bold">التفاصيل</th>
+                          <th className="p-2 font-bold">التكلفة (ل.س)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-right">
+                        <tr className="border-t border-border">
+                          <td className="p-2 font-medium">سعر الباقة كاملة</td>
+                          <td className="p-2 text-xs text-muted-foreground">سعر ثابت</td>
+                          <td className="p-2 font-bold">{(bouquetPrice ?? 0).toLocaleString("ar")}</td>
+                        </tr>
+                        <tr className="border-t border-border">
+                          <td className="p-2 font-medium">عبارة على شريط الساتان</td>
+                          <td className="p-2">
+                            <input
+                              type="text"
+                              value={ribbonText}
+                              onChange={(e) => setRibbonText(e.target.value)}
+                              placeholder="اتركها فارغة إن لم ترغب بشريط"
+                              className="w-full rounded-md border border-border bg-background px-2 py-1 text-sm outline-none focus:border-primary"
+                            />
+                          </td>
+                          <td className="p-2 font-bold">{ribbonTotal.toLocaleString("ar")}</td>
+                        </tr>
+                        <tr className="border-t-2 border-primary/40 bg-primary/5">
+                          <td className="p-3 font-extrabold" colSpan={2}>المجموع</td>
+                          <td className="p-3 text-lg font-extrabold text-primary">{bouquetTotal.toLocaleString("ar")} ل.س</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
                     <Field label="اسم العريس" value={groom} onChange={setGroom} placeholder="مثال: محمد" />
