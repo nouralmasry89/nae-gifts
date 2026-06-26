@@ -6,6 +6,7 @@ import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
 import { getProducts, formatPrice } from "@/lib/products";
+import { motherSubs } from "@/lib/motherSubs";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
@@ -73,7 +74,28 @@ function CategoryPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12">
-          {products.length > 0 ? (
+          {category.slug === "mother" ? (
+            <>
+              <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصفح حسب نوع الهدية</h2>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                {motherSubs.map((s) => (
+                  <Link
+                    key={s.slug}
+                    to="/mother/$sub"
+                    params={{ sub: s.slug }}
+                    className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      <img src={s.image} alt={s.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-sm font-bold line-clamp-2 group-hover:text-primary">{s.name}</h3>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : products.length > 0 ? (
             <>
               <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصاميمنا</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
