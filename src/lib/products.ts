@@ -123,5 +123,5 @@ export const getProduct = (id: string): Product | undefined =>
 
 export const formatPrice = (p: Product): string =>
   p.priceNew === 0
-    ? "السعر حسب الحجم — تواصل معنا"
+    ? "يمكنكم حساب الكلفة من خلال تعبئة جدول الطلب"
     : `${p.priceNew.toLocaleString("ar")} ل.س جديدة • ${p.priceOld.toLocaleString("ar")} ل.س قديمة`;
