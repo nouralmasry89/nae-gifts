@@ -81,24 +81,35 @@ const dowry: Product[] = [
   { id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 7", image: dowry7, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
 ];
 
-const FLOWERS_DESC =
-  "باقات ورد صناعي راقية تدوم طويلاً، بتنسيقات وألوان حسب رغبتك.\nيمكنكم تخصيصها بالألوان والحجم والتغليف الذي ترغبون به.";
-
 const FLOWERS1_DESC =
   "باقات من الورد الصناعي شبيه بالطبيعي بنسبة مئة بالمئة.\nسعر الباقة حسب عدد الورود — يمكنكم حساب سعر الباقة والطلب من خلال الجدول التالي:";
 
+const FLOWERS2_DESC =
+  "باقات ورد ساتان متوفرة بكافة الأحجام والألوان.\nلمعرفة الأسعار والتفاصيل قم بتعبئة جدول الطلب.";
+
+const FLOWERS3_DESC =
+  "مسكة عروس توليب صناعي بتصميم أنيق ومميز.\nلمعرفة الأسعار قم بتعبئة جدول الطلب.";
+
+const FLOWERS4_DESC =
+  "مسكة عروس مصنوعة من ورود القرنفل والفل والجبسفيل الصناعي بتصميم أنيق ومميز.\nلمعرفة الأسعار قم بتعبئة جدول الطلب.";
+
 const flowers: Product[] = [
   { id: "flowers-1", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 1", image: flower1, priceNew: 0, priceOld: 0, description: FLOWERS1_DESC },
-  { id: "flowers-2", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 2", image: flower2, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
-  { id: "flowers-3", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 3", image: flower3, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
-  { id: "flowers-4", categorySlug: "flowers", name: "باقة ورد صناعي — تصميم 4", image: flower4, priceNew: 0, priceOld: 0, description: FLOWERS_DESC },
+  { id: "flowers-2", categorySlug: "flowers", name: "باقات من الساتان", image: flower2, priceNew: 0, priceOld: 0, description: FLOWERS2_DESC },
+  { id: "flowers-3", categorySlug: "flowers", name: "مسكة عروس توليب صناعي", image: flower3, priceNew: 0, priceOld: 0, description: FLOWERS3_DESC },
+  { id: "flowers-4", categorySlug: "flowers", name: "مسكة عروس قرنفل صناعي", image: flower4, priceNew: 0, priceOld: 0, description: FLOWERS4_DESC },
 ];
 
 export const FLOWER_PRICING = {
-  perRose: 60,
-  ribbon: 100,
+  perRose: 50,
+  ribbon: 150,
   wrapping: 150,
   colors: ["أبيض", "أحمر", "خمري", "زهري", "أزرق", "أصفر", "موڤ"],
+};
+
+export const FLOWER_BOUQUET_PRICE: Record<string, number> = {
+  "flowers-3": 2000,
+  "flowers-4": 1500,
 };
 
 export const productsByCategory: Record<string, Product[]> = { rings, dowry, flowers };
