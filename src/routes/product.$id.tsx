@@ -4,7 +4,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { getProduct, formatPrice, FLOWER_PRICING } from "@/lib/products";
+import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE } from "@/lib/products";
 import { getCategory, waLink } from "@/lib/categories";
 
 export const Route = createFileRoute("/product/$id")({
