@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as MotherSubRouteImport } from './routes/mother.$sub'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
+import { Route as MotherQuranBoxesItemRouteImport } from './routes/mother.quran-boxes.$item'
 
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
@@ -40,6 +41,11 @@ const CategorySlugRoute = CategorySlugRouteImport.update({
   path: '/category/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MotherQuranBoxesItemRoute = MotherQuranBoxesItemRouteImport.update({
+  id: '/mother/quran-boxes/$item',
+  path: '/mother/quran-boxes/$item',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,8 +80,15 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/mother/$sub'
     | '/product/$id'
+    | '/mother/quran-boxes/$item'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/contact' | '/category/$slug' | '/mother/$sub' | '/product/$id'
+  to:
+    | '/'
+    | '/contact'
+    | '/category/$slug'
+    | '/mother/$sub'
+    | '/product/$id'
+    | '/mother/quran-boxes/$item'
   id:
     | '__root__'
     | '/'
@@ -80,6 +96,7 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/mother/$sub'
     | '/product/$id'
+    | '/mother/quran-boxes/$item'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +105,7 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   MotherSubRoute: typeof MotherSubRoute
   ProductIdRoute: typeof ProductIdRoute
+  MotherQuranBoxesItemRoute: typeof MotherQuranBoxesItemRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mother/quran-boxes/$item': {
+      id: '/mother/quran-boxes/$item'
+      path: '/mother/quran-boxes/$item'
+      fullPath: '/mother/quran-boxes/$item'
+      preLoaderRoute: typeof MotherQuranBoxesItemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -136,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   MotherSubRoute: MotherSubRoute,
   ProductIdRoute: ProductIdRoute,
+  MotherQuranBoxesItemRoute: MotherQuranBoxesItemRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
