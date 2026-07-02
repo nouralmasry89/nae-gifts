@@ -7,6 +7,8 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
 import { getProducts, formatPrice } from "@/lib/products";
 import { motherSubs } from "@/lib/motherSubs";
+import { graduationSubs } from "@/lib/graduationSubs";
+import { teacherSubs } from "@/lib/teacherSubs";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
