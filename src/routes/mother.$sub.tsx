@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { getMotherSub } from "@/lib/motherSubs";
+import { quranItems } from "@/lib/quranBoxes";
 import { waLink } from "@/lib/categories";
 
 export const Route = createFileRoute("/mother/$sub")({
