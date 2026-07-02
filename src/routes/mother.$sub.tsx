@@ -73,16 +73,39 @@ function MotherSubPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12">
-          <div className="rounded-2xl border border-border bg-card p-8 text-center">
-            <h2 className="text-xl font-bold">تصاميم قيد الإضافة</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              سنقوم بإضافة صور المنتجات الخاصة بهذا القسم قريباً. للاطلاع على أحدث الأعمال أو طلب تصميم خاص، تواصل معنا مباشرة.
-            </p>
-            <a href={waLink(orderMsg)} target="_blank" rel="noopener noreferrer"
-               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
-              <MessageCircle className="h-4 w-4" /> اطلب الآن
-            </a>
-          </div>
+          {sub.slug === "quran-boxes" ? (
+            <>
+              <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصفح حسب النوع</h2>
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                {quranItems.map((item) => (
+                  <Link
+                    key={item.slug}
+                    to="/mother/quran-boxes/$item"
+                    params={{ item: item.slug }}
+                    className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary"
+                  >
+                    <div className="aspect-square overflow-hidden">
+                      <img src={item.image} alt={item.name} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="text-sm font-bold line-clamp-2 group-hover:text-primary">{item.name}</h3>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-2xl border border-border bg-card p-8 text-center">
+              <h2 className="text-xl font-bold">تصاميم قيد الإضافة</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                سنقوم بإضافة صور المنتجات الخاصة بهذا القسم قريباً. للاطلاع على أحدث الأعمال أو طلب تصميم خاص، تواصل معنا مباشرة.
+              </p>
+              <a href={waLink(orderMsg)} target="_blank" rel="noopener noreferrer"
+                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90">
+                <MessageCircle className="h-4 w-4" /> اطلب الآن
+              </a>
+            </div>
+          )}
         </section>
       </main>
       <Footer />
