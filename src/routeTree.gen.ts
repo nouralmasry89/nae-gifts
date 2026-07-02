@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TeacherSubRouteImport } from './routes/teacher.$sub'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
 import { Route as MotherSubRouteImport } from './routes/mother.$sub'
+import { Route as GraduationSubRouteImport } from './routes/graduation.$sub'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
 import { Route as MotherQuranBoxesItemRouteImport } from './routes/mother.quran-boxes.$item'
 
@@ -26,6 +28,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherSubRoute = TeacherSubRouteImport.update({
+  id: '/teacher/$sub',
+  path: '/teacher/$sub',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
@@ -34,6 +41,11 @@ const ProductIdRoute = ProductIdRouteImport.update({
 const MotherSubRoute = MotherSubRouteImport.update({
   id: '/mother/$sub',
   path: '/mother/$sub',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GraduationSubRoute = GraduationSubRouteImport.update({
+  id: '/graduation/$sub',
+  path: '/graduation/$sub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CategorySlugRoute = CategorySlugRouteImport.update({
@@ -51,16 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRoutesById {
@@ -68,8 +84,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/contact': typeof ContactRoute
   '/category/$slug': typeof CategorySlugRoute
+  '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
 export interface FileRouteTypes {
@@ -78,24 +96,30 @@ export interface FileRouteTypes {
     | '/'
     | '/contact'
     | '/category/$slug'
+    | '/graduation/$sub'
     | '/mother/$sub'
     | '/product/$id'
+    | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/contact'
     | '/category/$slug'
+    | '/graduation/$sub'
     | '/mother/$sub'
     | '/product/$id'
+    | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   id:
     | '__root__'
     | '/'
     | '/contact'
     | '/category/$slug'
+    | '/graduation/$sub'
     | '/mother/$sub'
     | '/product/$id'
+    | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   fileRoutesById: FileRoutesById
 }
@@ -103,8 +127,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ContactRoute: typeof ContactRoute
   CategorySlugRoute: typeof CategorySlugRoute
+  GraduationSubRoute: typeof GraduationSubRoute
   MotherSubRoute: typeof MotherSubRoute
   ProductIdRoute: typeof ProductIdRoute
+  TeacherSubRoute: typeof TeacherSubRoute
   MotherQuranBoxesItemRoute: typeof MotherQuranBoxesItemRoute
 }
 
@@ -124,6 +150,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher/$sub': {
+      id: '/teacher/$sub'
+      path: '/teacher/$sub'
+      fullPath: '/teacher/$sub'
+      preLoaderRoute: typeof TeacherSubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
@@ -136,6 +169,13 @@ declare module '@tanstack/react-router' {
       path: '/mother/$sub'
       fullPath: '/mother/$sub'
       preLoaderRoute: typeof MotherSubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/graduation/$sub': {
+      id: '/graduation/$sub'
+      path: '/graduation/$sub'
+      fullPath: '/graduation/$sub'
+      preLoaderRoute: typeof GraduationSubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/category/$slug': {
@@ -159,8 +199,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ContactRoute: ContactRoute,
   CategorySlugRoute: CategorySlugRoute,
+  GraduationSubRoute: GraduationSubRoute,
   MotherSubRoute: MotherSubRoute,
   ProductIdRoute: ProductIdRoute,
+  TeacherSubRoute: TeacherSubRoute,
   MotherQuranBoxesItemRoute: MotherQuranBoxesItemRoute,
 }
 export const routeTree = rootRouteImport

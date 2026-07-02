@@ -7,6 +7,8 @@ import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
 import { getProducts, formatPrice } from "@/lib/products";
 import { motherSubs } from "@/lib/motherSubs";
+import { graduationSubs } from "@/lib/graduationSubs";
+import { teacherSubs } from "@/lib/teacherSubs";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
@@ -74,14 +76,14 @@ function CategoryPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12">
-          {category.slug === "mother" ? (
+          {category.slug === "mother" || category.slug === "graduation" || category.slug === "teacher" ? (
             <>
               <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصفح حسب نوع الهدية</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {motherSubs.map((s) => (
+                {(category.slug === "mother" ? motherSubs : category.slug === "graduation" ? graduationSubs : teacherSubs).map((s) => (
                   <Link
                     key={s.slug}
-                    to="/mother/$sub"
+                    to={category.slug === "mother" ? "/mother/$sub" : category.slug === "graduation" ? "/graduation/$sub" : "/teacher/$sub"}
                     params={{ sub: s.slug }}
                     className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary"
                   >

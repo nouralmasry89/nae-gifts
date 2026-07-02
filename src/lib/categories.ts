@@ -20,10 +20,10 @@ export const categories: Category[] = [
   { slug: "dowry", name: "صناديق مهر و هدايا", description: "صناديق مهر وهدايا فاخرة مصممة خصيصاً لتليق بأجمل المناسبات.", image: dowry },
   { slug: "flowers", name: "باقات ورد صناعي", description: "باقات ورد صناعي راقية تدوم طويلاً، بتنسيقات وألوان حسب رغبتك.", image: flowers },
   { slug: "mother", name: "هدايا عيد الأم", description: "هدايا مميزة لأغلى إنسانة في حياتك، مصممة بلمسة من القلب.", image: mother },
-  { slug: "teacher", name: "هدايا عيد المعلم", description: "هدايا تليق بمن علّمنا حرفاً، تصاميم راقية ومخصصة.", image: teacher },
+  { slug: "teacher", name: "هدايا عيد المعلم", description: "مجموعة كبيرة ومتنوعة من هدايا عيد المعلم بتصاميم وأشكال ومواد متنوعة، يمكنكم تخصيصها بالشكل والاسم أو الصورة التي ترغبون بها.", image: teacher },
   { slug: "birthday", name: "أعياد الميلاد", description: "هدايا أعياد ميلاد مخصصة بأسماء وتصاميم تناسب كل الأعمار.", image: birthday },
   { slug: "ramadan", name: "رمضان و الأعياد", description: "هدايا رمضان والأعياد بطابع روحاني وتصاميم تجمع الأصالة بالحداثة.", image: ramadan },
-  { slug: "graduation", name: "هدايا التخرج", description: "احتفل بإنجازه بهدية تخرج مميزة ومصممة خصيصاً لهذه اللحظة.", image: graduation },
+  { slug: "graduation", name: "هدايا التخرج", description: "تشكيلة واسعة ومتنوعة من هدايا وتوزيعات التخرج بأشكال ومواد كثيرة، يمكنكم دائماً تخصيصها بالإسم أو الصورة التي ترغبون أن تضعوها.", image: graduation },
   { slug: "newborn", name: "مولود جديد", description: "هدايا مولود جديد بتصاميم ناعمة ومخصصة لاستقبال الفرحة.", image: newborn },
 ];
 
