@@ -21,7 +21,7 @@ export const categories: Category[] = [
   { slug: "flowers", name: "باقات ورد صناعي", description: "باقات ورد صناعي راقية تدوم طويلاً، بتنسيقات وألوان حسب رغبتك.", image: flowers },
   { slug: "mother", name: "هدايا عيد الأم", description: "هدايا مميزة لأغلى إنسانة في حياتك، مصممة بلمسة من القلب.", image: mother },
   { slug: "teacher", name: "هدايا عيد المعلم", description: "مجموعة كبيرة ومتنوعة من هدايا عيد المعلم بتصاميم وأشكال ومواد متنوعة، يمكنكم تخصيصها بالشكل والاسم أو الصورة التي ترغبون بها.", image: teacher },
-  { slug: "birthday", name: "أعياد الميلاد", description: "هدايا أعياد ميلاد مخصصة بأسماء وتصاميم تناسب كل الأعمار.", image: birthday },
+  { slug: "birthday", name: "أعياد الميلاد", description: "هدايا أعياد الميلاد لا تنتهي، ناي تقدم لكم تشكيلة كبيرة ومتجددة دائماً من هدايا عيد الميلاد الخاصة.", image: birthday },
   { slug: "ramadan", name: "رمضان و الأعياد", description: "هدايا رمضان والأعياد بطابع روحاني وتصاميم تجمع الأصالة بالحداثة.", image: ramadan },
   { slug: "graduation", name: "هدايا التخرج", description: "تشكيلة واسعة ومتنوعة من هدايا وتوزيعات التخرج بأشكال ومواد كثيرة، يمكنكم دائماً تخصيصها بالإسم أو الصورة التي ترغبون أن تضعوها.", image: graduation },
   { slug: "newborn", name: "مولود جديد", description: "هدايا مولود جديد بتصاميم ناعمة ومخصصة لاستقبال الفرحة.", image: newborn },
