@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherSubRouteImport } from './routes/teacher.$sub'
+import { Route as RamadanSubRouteImport } from './routes/ramadan.$sub'
 import { Route as ProductIdRouteImport } from './routes/product.$id'
+import { Route as NewbornSubRouteImport } from './routes/newborn.$sub'
 import { Route as MotherSubRouteImport } from './routes/mother.$sub'
 import { Route as GraduationSubRouteImport } from './routes/graduation.$sub'
 import { Route as CategorySlugRouteImport } from './routes/category.$slug'
@@ -33,9 +35,19 @@ const TeacherSubRoute = TeacherSubRouteImport.update({
   path: '/teacher/$sub',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RamadanSubRoute = RamadanSubRouteImport.update({
+  id: '/ramadan/$sub',
+  path: '/ramadan/$sub',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProductIdRoute = ProductIdRouteImport.update({
   id: '/product/$id',
   path: '/product/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NewbornSubRoute = NewbornSubRouteImport.update({
+  id: '/newborn/$sub',
+  path: '/newborn/$sub',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MotherSubRoute = MotherSubRouteImport.update({
@@ -65,7 +77,9 @@ export interface FileRoutesByFullPath {
   '/category/$slug': typeof CategorySlugRoute
   '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
+  '/newborn/$sub': typeof NewbornSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/ramadan/$sub': typeof RamadanSubRoute
   '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
@@ -75,7 +89,9 @@ export interface FileRoutesByTo {
   '/category/$slug': typeof CategorySlugRoute
   '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
+  '/newborn/$sub': typeof NewbornSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/ramadan/$sub': typeof RamadanSubRoute
   '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
@@ -86,7 +102,9 @@ export interface FileRoutesById {
   '/category/$slug': typeof CategorySlugRoute
   '/graduation/$sub': typeof GraduationSubRoute
   '/mother/$sub': typeof MotherSubRoute
+  '/newborn/$sub': typeof NewbornSubRoute
   '/product/$id': typeof ProductIdRoute
+  '/ramadan/$sub': typeof RamadanSubRoute
   '/teacher/$sub': typeof TeacherSubRoute
   '/mother/quran-boxes/$item': typeof MotherQuranBoxesItemRoute
 }
@@ -98,7 +116,9 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/graduation/$sub'
     | '/mother/$sub'
+    | '/newborn/$sub'
     | '/product/$id'
+    | '/ramadan/$sub'
     | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   fileRoutesByTo: FileRoutesByTo
@@ -108,7 +128,9 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/graduation/$sub'
     | '/mother/$sub'
+    | '/newborn/$sub'
     | '/product/$id'
+    | '/ramadan/$sub'
     | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   id:
@@ -118,7 +140,9 @@ export interface FileRouteTypes {
     | '/category/$slug'
     | '/graduation/$sub'
     | '/mother/$sub'
+    | '/newborn/$sub'
     | '/product/$id'
+    | '/ramadan/$sub'
     | '/teacher/$sub'
     | '/mother/quran-boxes/$item'
   fileRoutesById: FileRoutesById
@@ -129,7 +153,9 @@ export interface RootRouteChildren {
   CategorySlugRoute: typeof CategorySlugRoute
   GraduationSubRoute: typeof GraduationSubRoute
   MotherSubRoute: typeof MotherSubRoute
+  NewbornSubRoute: typeof NewbornSubRoute
   ProductIdRoute: typeof ProductIdRoute
+  RamadanSubRoute: typeof RamadanSubRoute
   TeacherSubRoute: typeof TeacherSubRoute
   MotherQuranBoxesItemRoute: typeof MotherQuranBoxesItemRoute
 }
@@ -157,11 +183,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherSubRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ramadan/$sub': {
+      id: '/ramadan/$sub'
+      path: '/ramadan/$sub'
+      fullPath: '/ramadan/$sub'
+      preLoaderRoute: typeof RamadanSubRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/product/$id': {
       id: '/product/$id'
       path: '/product/$id'
       fullPath: '/product/$id'
       preLoaderRoute: typeof ProductIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/newborn/$sub': {
+      id: '/newborn/$sub'
+      path: '/newborn/$sub'
+      fullPath: '/newborn/$sub'
+      preLoaderRoute: typeof NewbornSubRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mother/$sub': {
@@ -201,7 +241,9 @@ const rootRouteChildren: RootRouteChildren = {
   CategorySlugRoute: CategorySlugRoute,
   GraduationSubRoute: GraduationSubRoute,
   MotherSubRoute: MotherSubRoute,
+  NewbornSubRoute: NewbornSubRoute,
   ProductIdRoute: ProductIdRoute,
+  RamadanSubRoute: RamadanSubRoute,
   TeacherSubRoute: TeacherSubRoute,
   MotherQuranBoxesItemRoute: MotherQuranBoxesItemRoute,
 }
