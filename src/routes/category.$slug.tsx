@@ -9,6 +9,8 @@ import { getProducts, formatPrice } from "@/lib/products";
 import { motherSubs } from "@/lib/motherSubs";
 import { graduationSubs } from "@/lib/graduationSubs";
 import { teacherSubs } from "@/lib/teacherSubs";
+import { ramadanSubs } from "@/lib/ramadanSubs";
+import { newbornSubs } from "@/lib/newbornSubs";
 
 export const Route = createFileRoute("/category/$slug")({
   loader: ({ params }) => {
