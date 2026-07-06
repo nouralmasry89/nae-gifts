@@ -78,14 +78,24 @@ function CategoryPage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-4 py-12">
-          {category.slug === "mother" || category.slug === "graduation" || category.slug === "teacher" ? (
+          {["mother","graduation","teacher","ramadan","newborn"].includes(category.slug) ? (
             <>
               <h2 className="mb-6 text-2xl font-extrabold md:text-3xl">تصفح حسب نوع الهدية</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                {(category.slug === "mother" ? motherSubs : category.slug === "graduation" ? graduationSubs : teacherSubs).map((s) => (
+                {(category.slug === "mother" ? motherSubs
+                  : category.slug === "graduation" ? graduationSubs
+                  : category.slug === "teacher" ? teacherSubs
+                  : category.slug === "ramadan" ? ramadanSubs
+                  : newbornSubs).map((s) => (
                   <Link
                     key={s.slug}
-                    to={category.slug === "mother" ? "/mother/$sub" : category.slug === "graduation" ? "/graduation/$sub" : "/teacher/$sub"}
+                    to={
+                      category.slug === "mother" ? "/mother/$sub"
+                      : category.slug === "graduation" ? "/graduation/$sub"
+                      : category.slug === "teacher" ? "/teacher/$sub"
+                      : category.slug === "ramadan" ? "/ramadan/$sub"
+                      : "/newborn/$sub"
+                    }
                     params={{ sub: s.slug }}
                     className="group overflow-hidden rounded-xl border border-border bg-card transition hover:border-primary"
                   >
