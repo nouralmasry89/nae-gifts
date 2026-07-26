@@ -80,10 +80,29 @@ const DOWRY4_DESC =
   "صندوق مهر من البليكسي بالكامل، صندوق شفاف مع زخارف باللون الذهبي أو الفضي، وغطاء من البليكسي الأبيض أو الأسود مع كتابة الأسماء والعبارات باللون الفضي أو الذهبي.";
 
 
+const dowrySizes = (prices: number[]): SizeOption[] =>
+  ["20 سم", "25 سم", "30 سم", "35 سم"].map((label, i) => ({ label, price: prices[i] }));
+
 const dowry: Product[] = [
-  { id: "dowry-1", categorySlug: "dowry", name: "صندوق مهر — تصميم 1", image: dowry1, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
-  { id: "dowry-3", categorySlug: "dowry", name: "صندوق مهر — تصميم 2", image: dowry3, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
-  { id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 3", image: dowry7, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  {
+    id: "dowry-1", categorySlug: "dowry", name: "صندوق مهر — تصميم 1", image: dowry1,
+    priceNew: 0, priceOld: 0, description: DOWRY_DESC,
+    priceNote: "من 1,500 إلى 2,250 ل.س جديدة حسب الحجم",
+    sizeOptions: dowrySizes([1500, 1750, 2000, 2250]),
+  },
+  {
+    id: "dowry-3", categorySlug: "dowry", name: "صندوق مهر — تصميم 2", image: dowry3,
+    priceNew: 0, priceOld: 0, description: DOWRY_DESC,
+    priceNote: "من 1,250 إلى 2,000 ل.س جديدة حسب الحجم",
+    sizeOptions: dowrySizes([1250, 1500, 1750, 2000]),
+  },
+  {
+    id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 3", image: dowry7,
+    priceNew: 0, priceOld: 0, description: DOWRY_DESC,
+    priceNote: "من 1,500 إلى 2,500 ل.س جديدة حسب الحجم",
+    sizeOptions: dowrySizes([1500, 1800, 2100, 2500]),
+  },
+
   {
     id: "dowry-4",
     categorySlug: "dowry",
