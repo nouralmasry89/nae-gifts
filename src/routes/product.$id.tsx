@@ -55,7 +55,6 @@ function ProductPage() {
   const [bride, setBride] = useState("");
   const [date, setDate] = useState("");
   const [colors, setColors] = useState("");
-  const [boxType, setBoxType] = useState("");
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
   const gallery = product.gallery ?? [product.image];
