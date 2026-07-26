@@ -80,6 +80,24 @@ const dowry: Product[] = [
   { id: "dowry-1", categorySlug: "dowry", name: "صندوق مهر — تصميم 1", image: dowry1, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
   { id: "dowry-3", categorySlug: "dowry", name: "صندوق مهر — تصميم 2", image: dowry3, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
   { id: "dowry-7", categorySlug: "dowry", name: "صندوق مهر — تصميم 3", image: dowry7, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
+  {
+    id: "dowry-4",
+    categorySlug: "dowry",
+    name: "صندوق مهر — تصميم 4",
+    image: dowryPlexi1,
+    gallery: [dowryPlexi1, dowryPlexi2, dowryPlexi3],
+    priceNew: 0,
+    priceOld: 0,
+    priceNote: "من 2,000 إلى 3,500 ل.س جديدة حسب الحجم",
+    sizeOptions: [
+      { label: "20 سم", price: 2000 },
+      { label: "25 سم", price: 2500 },
+      { label: "30 سم", price: 3000 },
+      { label: "35 سم", price: 3500 },
+    ],
+    description: DOWRY4_DESC,
+  },
+
 ];
 
 const FLOWERS1_DESC =
