@@ -145,6 +145,8 @@ export const getProduct = (id: string): Product | undefined =>
   allProducts.find((p) => p.id === id);
 
 export const formatPrice = (p: Product): string =>
-  p.priceNew === 0
+  p.priceNote
+    ? p.priceNote
+    : p.priceNew === 0
     ? "يمكنكم حساب الكلفة من خلال تعبئة جدول الطلب"
     : `${p.priceNew.toLocaleString("ar")} ل.س جديدة • ${p.priceOld.toLocaleString("ar")} ل.س قديمة`;
