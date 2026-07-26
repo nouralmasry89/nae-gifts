@@ -76,6 +76,10 @@ const rings: Product[] = [
 const DOWRY_DESC =
   "صناديق المهر متوفرة بمواد وتصاميم متنوعة (خشب — بليكسي — خشب مع غطاء بليكسي…).\nتختلف الأسعار حسب حجم الصندوق.\nيمكنكم تخصيصها بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
+const DOWRY4_DESC =
+  "صندوق مهر من البليكسي بالكامل، صندوق شفاف مع زخارف باللون الذهبي أو الفضي، وغطاء من البليكسي الأبيض أو الأسود مع كتابة الأسماء والعبارات باللون الفضي أو الذهبي.";
+
+
 const dowry: Product[] = [
   { id: "dowry-1", categorySlug: "dowry", name: "صندوق مهر — تصميم 1", image: dowry1, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
   { id: "dowry-3", categorySlug: "dowry", name: "صندوق مهر — تصميم 2", image: dowry3, priceNew: 0, priceOld: 0, description: DOWRY_DESC },
