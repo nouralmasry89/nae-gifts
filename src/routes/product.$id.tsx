@@ -4,7 +4,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE } from "@/lib/products";
+import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE, type SizeOption } from "@/lib/products";
 import { getCategory, waLink } from "@/lib/categories";
 
 export const Route = createFileRoute("/product/$id")({
@@ -58,6 +58,10 @@ function ProductPage() {
   const [boxType, setBoxType] = useState("");
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
+  const gallery = product.gallery ?? [product.image];
+  const [mainImage, setMainImage] = useState(product.image);
+  const selectedSize = product.sizeOptions?.find((s: SizeOption) => s.label === boxSize);
+
 
   // Flowers rose-form state
   const [roseCount, setRoseCount] = useState<number>(12);
@@ -109,7 +113,7 @@ function ProductPage() {
     : isDowry
     ? [
         `• نوع الصندوق: ${boxType.trim() || "-"}`,
-        `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
+        `• حجم الصندوق${product.sizeOptions ? "" : " / عدد الرزم"}: ${boxSize.trim() || "-"}${selectedSize ? ` — ${selectedSize.price.toLocaleString("ar")} ل.س جديدة` : ""}`,
         `• تاريخ المناسبة: ${date.trim() || "-"}`,
       ]
     : [
@@ -140,11 +144,28 @@ function ProductPage() {
         </nav>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="aspect-square overflow-hidden">
-              <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="aspect-square overflow-hidden">
+                <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+              </div>
             </div>
+            {gallery.length > 1 && (
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {gallery.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setMainImage(img)}
+                    className={`overflow-hidden rounded-lg border ${img === mainImage ? "border-primary" : "border-border"}`}
+                    aria-label={`صورة ${i + 1}`}
+                  >
+                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="aspect-square h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
 
           <div className="flex flex-col">
             <h1 className="text-2xl font-extrabold md:text-4xl">{product.name}</h1>
@@ -285,12 +306,36 @@ function ProductPage() {
                             <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
                           </select>
                         </div>
-                        <Field
-                          label="حجم الصندوق / عدد الرزم"
-                          value={boxSize}
-                          onChange={setBoxSize}
-                          placeholder="مثال: وسط — 10 رزم"
-                        />
+                        {product.sizeOptions ? (
+                          <div>
+                            <label className="mb-2 block text-sm font-bold">حجم الصندوق</label>
+                            <select
+                              value={boxSize}
+                              onChange={(e) => setBoxSize(e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                            >
+                              <option value="">اختر الحجم</option>
+                              {product.sizeOptions.map((s: SizeOption) => (
+                                <option key={s.label} value={s.label}>
+                                  {s.label} — {s.price.toLocaleString("ar")} ل.س جديدة
+                                </option>
+                              ))}
+                            </select>
+                            {selectedSize && (
+                              <div className="mt-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-extrabold text-primary">
+                                السعر: {selectedSize.price.toLocaleString("ar")} ل.س جديدة
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <Field
+                            label="حجم الصندوق / عدد الرزم"
+                            value={boxSize}
+                            onChange={setBoxSize}
+                            placeholder="مثال: وسط — 10 رزم"
+                          />
+                        )}
+
                         <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
                       </>
                     ) : (
