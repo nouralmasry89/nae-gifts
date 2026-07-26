@@ -149,19 +149,19 @@ function ProductPage() {
               </div>
             </div>
             {gallery.length > 1 && (
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
-                {gallery.map((img: string, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => setMainImage(img)}
-                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border ${img === mainImage ? "border-primary" : "border-border"}`}
-                    aria-label={`صورة ${i + 1}`}
-                  >
-                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
+  <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:thin]">
+    {gallery.map((img: string, i: number) => (
+      <button
+        key={i}
+        onClick={() => setMainImage(img)}
+        className={`aspect-square w-[23%] shrink-0 snap-start overflow-hidden rounded-xl border-2 ${img === mainImage ? "border-primary" : "border-border"}`}
+        aria-label={`صورة ${i + 1}`}
+      >
+        <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+      </button>
+    ))}
+  </div>
+)}
           </div>
 
 
