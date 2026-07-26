@@ -149,15 +149,15 @@ function ProductPage() {
               </div>
             </div>
             {gallery.length > 1 && (
-              <div className="mt-3 grid grid-cols-4 gap-2">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:thin]">
                 {gallery.map((img: string, i: number) => (
                   <button
                     key={i}
                     onClick={() => setMainImage(img)}
-                    className={`overflow-hidden rounded-lg border ${img === mainImage ? "border-primary" : "border-border"}`}
+                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border ${img === mainImage ? "border-primary" : "border-border"}`}
                     aria-label={`صورة ${i + 1}`}
                   >
-                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="aspect-square h-full w-full object-cover" />
+                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
                   </button>
                 ))}
               </div>
