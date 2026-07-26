@@ -58,6 +58,10 @@ function ProductPage() {
   const [boxType, setBoxType] = useState("");
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
+  const gallery = product.gallery ?? [product.image];
+  const [mainImage, setMainImage] = useState(product.image);
+  const selectedSize = product.sizeOptions?.find((s) => s.label === boxSize);
+
 
   // Flowers rose-form state
   const [roseCount, setRoseCount] = useState<number>(12);
