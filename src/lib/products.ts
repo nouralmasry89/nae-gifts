@@ -6,6 +6,21 @@ import ring5 from "@/assets/products/rings/ring-5.jpg";
 import ring6 from "@/assets/products/rings/ring-6.jpg";
 import ring7 from "@/assets/products/rings/ring-7.jpg";
 import ring9 from "@/assets/products/rings/ring-9.jpg";
+import ringMirror1 from "@/assets/products/rings/mirror-gallery/mirror-1.png";
+import ringMirror2 from "@/assets/products/rings/mirror-gallery/mirror-2.webp";
+import ringMirror3 from "@/assets/products/rings/mirror-gallery/mirror-3.jpg";
+import ringMirror4 from "@/assets/products/rings/mirror-gallery/mirror-4.jpg";
+import ringMirror5 from "@/assets/products/rings/mirror-gallery/mirror-5.png";
+import ringMirror6 from "@/assets/products/rings/mirror-gallery/mirror-6.png";
+import ringMirror7 from "@/assets/products/rings/mirror-gallery/mirror-7.png";
+import ringMirror8 from "@/assets/products/rings/mirror-gallery/mirror-8.png";
+import ringMirror9 from "@/assets/products/rings/mirror-gallery/mirror-9.jpg";
+import ringMirror10 from "@/assets/products/rings/mirror-gallery/mirror-10.png";
+import ringMirror11 from "@/assets/products/rings/mirror-gallery/mirror-11.jpg";
+import ringMirror12 from "@/assets/products/rings/mirror-gallery/mirror-12.png";
+import ringMirror13 from "@/assets/products/rings/mirror-gallery/mirror-13.jpg";
+import ringMirror14 from "@/assets/products/rings/mirror-gallery/mirror-14.png";
+import ringMirror15 from "@/assets/products/rings/mirror-gallery/mirror-15.jpg";
 import dowry1 from "@/assets/products/dowry/dowry-1.jpg";
 import dowry3 from "@/assets/products/dowry/dowry-3.jpg";
 import dowry7 from "@/assets/products/dowry/dowry-7.jpg";
@@ -58,7 +73,15 @@ const RING9_DESC =
   "ستاند مرايا (مصنوع من الزجاج وليس البليكسي) مع حفر الأسماء والتاريخ والعبارة على المرايا بشكل مباشر.\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
 const rings: Product[] = [
-  { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس - مرايا",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING9_DESC },
+  {
+    id: "rings-9", categorySlug: "rings", name: "ستاند محابس - مرايا", image: ring9,
+    gallery: [
+      ringMirror1, ringMirror2, ringMirror3, ringMirror4, ringMirror5,
+      ringMirror6, ringMirror7, ringMirror8, ringMirror9, ringMirror10,
+      ringMirror11, ringMirror12, ringMirror13, ringMirror14, ringMirror15,
+    ],
+    priceNew: 2250, priceOld: 225000, description: RING9_DESC,
+  },
   { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس - أبراج",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
   { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس - خريطة أو شكل",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
   { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس - نجمة و أسماء مجسمة - فضي",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
