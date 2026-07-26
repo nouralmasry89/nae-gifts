@@ -1,4 +1,8 @@
 import ring1 from "@/assets/products/rings/ring-1.jpg";
+import ringTower1 from "@/assets/products/rings/towers-gallery/tower-1.png";
+import ringTower2 from "@/assets/products/rings/towers-gallery/tower-2.png";
+import ringTower3 from "@/assets/products/rings/towers-gallery/tower-3.png";
+import ringTower4 from "@/assets/products/rings/towers-gallery/tower-4.jpg";
 import ring2 from "@/assets/products/rings/ring-2.jpg";
 import ring3 from "@/assets/products/rings/ring-3.jpg";
 import ring4 from "@/assets/products/rings/ring-4.jpg";
@@ -82,7 +86,11 @@ const rings: Product[] = [
     ],
     priceNew: 2250, priceOld: 225000, description: RING9_DESC,
   },
-  { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس - أبراج",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
+  {
+    id: "rings-1", categorySlug: "rings", name: "ستاند محابس - أبراج", image: ring1,
+    gallery: [ringTower1, ringTower2, ringTower3, ringTower4],
+    priceNew: 3000, priceOld: 300000, description: RING1_DESC,
+  },
   { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس - خريطة أو شكل",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
   { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس - نجمة و أسماء مجسمة - فضي",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
   { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس - نجمة و أسماء مجسمة - دهبي",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
