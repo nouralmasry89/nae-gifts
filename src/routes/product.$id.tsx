@@ -55,7 +55,6 @@ function ProductPage() {
   const [bride, setBride] = useState("");
   const [date, setDate] = useState("");
   const [colors, setColors] = useState("");
-  const [boxType, setBoxType] = useState("");
   const [boxSize, setBoxSize] = useState("");
   const [notes, setNotes] = useState("");
   const gallery = product.gallery ?? [product.image];
@@ -112,7 +111,6 @@ function ProductPage() {
       ]
     : isDowry
     ? [
-        `• نوع الصندوق: ${boxType.trim() || "-"}`,
         `• حجم الصندوق${product.sizeOptions ? "" : " / عدد الرزم"}: ${boxSize.trim() || "-"}${selectedSize ? ` — ${selectedSize.price.toLocaleString("ar")} ل.س جديدة` : ""}`,
         `• تاريخ المناسبة: ${date.trim() || "-"}`,
       ]
@@ -293,19 +291,6 @@ function ProductPage() {
                     <Field label="اسم العروس" value={bride} onChange={setBride} placeholder="مثال: سارة" />
                     {isDowry ? (
                       <>
-                        <div>
-                          <label className="mb-2 block text-sm font-bold">نوع الصندوق</label>
-                          <select
-                            value={boxType}
-                            onChange={(e) => setBoxType(e.target.value)}
-                            className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-                          >
-                            <option value="">اختر نوع الصندوق</option>
-                            <option value="خشب">خشب</option>
-                            <option value="بليكسي شفاف">بليكسي شفاف</option>
-                            <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
-                          </select>
-                        </div>
                         {product.sizeOptions ? (
                           <div>
                             <label className="mb-2 block text-sm font-bold">حجم الصندوق</label>
