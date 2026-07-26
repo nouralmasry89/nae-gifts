@@ -144,11 +144,28 @@ function ProductPage() {
         </nav>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="aspect-square overflow-hidden">
-              <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+          <div>
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="aspect-square overflow-hidden">
+                <img src={mainImage} alt={product.name} className="h-full w-full object-cover" />
+              </div>
             </div>
+            {gallery.length > 1 && (
+              <div className="mt-3 grid grid-cols-4 gap-2">
+                {gallery.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setMainImage(img)}
+                    className={`overflow-hidden rounded-lg border ${img === mainImage ? "border-primary" : "border-border"}`}
+                    aria-label={`صورة ${i + 1}`}
+                  >
+                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="aspect-square h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
+
 
           <div className="flex flex-col">
             <h1 className="text-2xl font-extrabold md:text-4xl">{product.name}</h1>
