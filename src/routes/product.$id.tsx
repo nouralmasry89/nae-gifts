@@ -4,7 +4,7 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
-import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE } from "@/lib/products";
+import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE, type SizeOption } from "@/lib/products";
 import { getCategory, waLink } from "@/lib/categories";
 
 export const Route = createFileRoute("/product/$id")({
@@ -60,7 +60,7 @@ function ProductPage() {
   const [notes, setNotes] = useState("");
   const gallery = product.gallery ?? [product.image];
   const [mainImage, setMainImage] = useState(product.image);
-  const selectedSize = product.sizeOptions?.find((s) => s.label === boxSize);
+  const selectedSize = product.sizeOptions?.find((s: SizeOption) => s.label === boxSize);
 
 
   // Flowers rose-form state
@@ -315,7 +315,7 @@ function ProductPage() {
                               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
                             >
                               <option value="">اختر الحجم</option>
-                              {product.sizeOptions.map((s) => (
+                              {product.sizeOptions.map((s: SizeOption) => (
                                 <option key={s.label} value={s.label}>
                                   {s.label} — {s.price.toLocaleString("ar")} ل.س جديدة
                                 </option>
