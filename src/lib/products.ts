@@ -5,9 +5,7 @@ import ring4 from "@/assets/products/rings/ring-4.jpg";
 import ring5 from "@/assets/products/rings/ring-5.jpg";
 import ring6 from "@/assets/products/rings/ring-6.jpg";
 import ring7 from "@/assets/products/rings/ring-7.jpg";
-import ring8 from "@/assets/products/rings/ring-8.jpg";
 import ring9 from "@/assets/products/rings/ring-9.jpg";
-import ring10 from "@/assets/products/rings/ring-10.jpg";
 import dowry1 from "@/assets/products/dowry/dowry-1.jpg";
 import dowry3 from "@/assets/products/dowry/dowry-3.jpg";
 import dowry7 from "@/assets/products/dowry/dowry-7.jpg";
@@ -60,16 +58,14 @@ const RING9_DESC =
   "ستاند مرايا (مصنوع من الزجاج وليس البليكسي) مع حفر الأسماء والتاريخ والعبارة على المرايا بشكل مباشر.\nيمكنكم تخصيصه بالأسماء والتاريخ والعبارة التي ترغبون بها.";
 
 const rings: Product[] = [
-  { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس — تصميم 9",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING9_DESC },
-  { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس — تصميم 1",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
-  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس — تصميم 2",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
-  { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس — تصميم 3",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
-  { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس — تصميم 4",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
-  { id: "rings-5",  categorySlug: "rings", name: "ستاند محابس — تصميم 5",  image: ring5,  priceNew: 2250, priceOld: 225000, description: RING5_DESC },
-  { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس — تصميم 6",  image: ring6,  priceNew: 2500, priceOld: 250000, description: RING6_DESC },
-  { id: "rings-7",  categorySlug: "rings", name: "ستاند محابس — تصميم 7",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING7_DESC },
-  { id: "rings-8",  categorySlug: "rings", name: "ستاند محابس — تصميم 8",  image: ring8,  priceNew: 2500, priceOld: 250000, description: RING8_DESC },
-  { id: "rings-10", categorySlug: "rings", name: "ستاند محابس — تصميم 10", image: ring10, priceNew: 2500, priceOld: 250000, description: RING_DESC },
+  { id: "rings-9",  categorySlug: "rings", name: "ستاند محابس - مرايا",  image: ring9,  priceNew: 2250, priceOld: 225000, description: RING9_DESC },
+  { id: "rings-1",  categorySlug: "rings", name: "ستاند محابس - أبراج",  image: ring1,  priceNew: 3000, priceOld: 300000, description: RING1_DESC },
+  { id: "rings-2",  categorySlug: "rings", name: "ستاند محابس - خريطة أو شكل",  image: ring2,  priceNew: 2250, priceOld: 225000, description: RING2_DESC },
+  { id: "rings-3",  categorySlug: "rings", name: "ستاند محابس - نجمة و أسماء مجسمة - فضي",  image: ring3,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
+  { id: "rings-4",  categorySlug: "rings", name: "ستاند محابس - نجمة و أسماء مجسمة - دهبي",  image: ring4,  priceNew: 2500, priceOld: 250000, description: RING_DESC },
+  { id: "rings-5",  categorySlug: "rings", name: "ستاند محابس دائري",  image: ring5,  priceNew: 2250, priceOld: 225000, description: RING5_DESC },
+  { id: "rings-6",  categorySlug: "rings", name: "ستاند محابس - شكل دوائر وقاعدة مستطيلة",  image: ring6,  priceNew: 2500, priceOld: 250000, description: RING6_DESC },
+  { id: "rings-7",  categorySlug: "rings", name: "ستاندات خشبية",  image: ring7,  priceNew: 1250, priceOld: 125000, description: RING7_DESC },
 ];
 
 
