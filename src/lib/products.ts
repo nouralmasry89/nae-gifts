@@ -11,20 +11,29 @@ import ring10 from "@/assets/products/rings/ring-10.jpg";
 import dowry1 from "@/assets/products/dowry/dowry-1.jpg";
 import dowry3 from "@/assets/products/dowry/dowry-3.jpg";
 import dowry7 from "@/assets/products/dowry/dowry-7.jpg";
+import dowryPlexi1 from "@/assets/products/dowry/dowry-plexi-1.jpg";
+import dowryPlexi2 from "@/assets/products/dowry/dowry-plexi-2.jpg";
+import dowryPlexi3 from "@/assets/products/dowry/dowry-plexi-3.jpg";
 import flower1 from "@/assets/products/flowers/flower-1.jpg";
 import flower2 from "@/assets/products/flowers/flower-2.jpg";
 import flower3 from "@/assets/products/flowers/flower-3.jpg";
 import flower4 from "@/assets/products/flowers/flower-4.jpg";
+
+export type SizeOption = { label: string; price: number };
 
 export type Product = {
   id: string;
   categorySlug: string;
   name: string;
   image: string;
+  gallery?: string[];
+  sizeOptions?: SizeOption[];
+  priceNote?: string;
   priceNew: number; // السعر بالليرة السورية الجديدة
   priceOld: number; // السعر بالليرة السورية القديمة
   description: string;
 };
+
 
 const RING_DESC =
   "ستاند بليكسي شفاف و (ذهبي أو فضي أو زهري أو أبيض أو أسود).\nيمكنكم تخصيصه بالأسماء و التاريخ و العبارة التي ترغبون بها.";
