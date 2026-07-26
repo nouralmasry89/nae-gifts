@@ -289,12 +289,36 @@ function ProductPage() {
                             <option value="خشب مع غطاء شفاف">خشب مع غطاء شفاف</option>
                           </select>
                         </div>
-                        <Field
-                          label="حجم الصندوق / عدد الرزم"
-                          value={boxSize}
-                          onChange={setBoxSize}
-                          placeholder="مثال: وسط — 10 رزم"
-                        />
+                        {product.sizeOptions ? (
+                          <div>
+                            <label className="mb-2 block text-sm font-bold">حجم الصندوق</label>
+                            <select
+                              value={boxSize}
+                              onChange={(e) => setBoxSize(e.target.value)}
+                              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                            >
+                              <option value="">اختر الحجم</option>
+                              {product.sizeOptions.map((s) => (
+                                <option key={s.label} value={s.label}>
+                                  {s.label} — {s.price.toLocaleString("ar")} ل.س جديدة
+                                </option>
+                              ))}
+                            </select>
+                            {selectedSize && (
+                              <div className="mt-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-extrabold text-primary">
+                                السعر: {selectedSize.price.toLocaleString("ar")} ل.س جديدة
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <Field
+                            label="حجم الصندوق / عدد الرزم"
+                            value={boxSize}
+                            onChange={setBoxSize}
+                            placeholder="مثال: وسط — 10 رزم"
+                          />
+                        )}
+
                         <Field label="تاريخ المناسبة" value={date} onChange={setDate} placeholder="مثال: 26/09/2025" />
                       </>
                     ) : (
