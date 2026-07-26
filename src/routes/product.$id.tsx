@@ -113,7 +113,7 @@ function ProductPage() {
     : isDowry
     ? [
         `• نوع الصندوق: ${boxType.trim() || "-"}`,
-        `• حجم الصندوق / عدد الرزم: ${boxSize.trim() || "-"}`,
+        `• حجم الصندوق${product.sizeOptions ? "" : " / عدد الرزم"}: ${boxSize.trim() || "-"}${selectedSize ? ` — ${selectedSize.price.toLocaleString("ar")} ل.س جديدة` : ""}`,
         `• تاريخ المناسبة: ${date.trim() || "-"}`,
       ]
     : [
