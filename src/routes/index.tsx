@@ -30,20 +30,11 @@ function Index() {
           <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-16 text-center md:py-24">
             <img src={logo} alt="N.A.E Gifts Store" width={160} height={160} className="h-32 w-32 rounded-2xl object-cover shadow-2xl md:h-40 md:w-40" />
             <h1 className="text-3xl font-extrabold leading-tight md:text-5xl">
-              هدايا <span className="text-primary">فريدة</span> ومصممة خصيصاً لك
+              نحن لا نصنع الهدايا فقط، بل <span className="text-primary">الذكريات</span>
             </h1>
-            <p className="max-w-xl text-base text-muted-foreground md:text-lg">
-              نصمم ونصنع الهدايا حسب رغبتك لكل المناسبات. اختر القسم المناسب وتواصل معنا عبر واتساب لطلب تصميمك الخاص.
+            <p className="text-base text-muted-foreground md:text-lg">
+              هدايا صُنعت خصيصاً لك
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-3">
-              <a href={waLink("مرحباً، أود طلب تصميم هدية مخصصة.")} target="_blank" rel="noopener noreferrer"
-                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-primary-foreground transition hover:opacity-90">
-                <MessageCircle className="h-5 w-5" /> اطلب عبر واتساب
-              </a>
-              <a href="#categories" className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 font-semibold hover:border-primary">
-                تصفح الأقسام
-              </a>
-            </div>
           </div>
         </section>
 
