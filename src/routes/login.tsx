@@ -5,6 +5,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { supabase, whatsappToEmail, normalizeWhatsapp } from "@/lib/supabase";
+import { enablePushNotifications } from "@/lib/push-client";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -39,6 +40,7 @@ function LoginPage() {
       setError("رقم الواتساب أو كلمة السر غير صحيحة.");
       return;
     }
+    await enablePushNotifications().catch(() => {});
     navigate({ to: "/" });
   };
 
