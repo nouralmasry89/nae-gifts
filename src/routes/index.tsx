@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
+import { EnableNotificationsButton } from "@/components/EnableNotificationsButton";
 import { categories, waLink } from "@/lib/categories";
 import logo from "@/assets/logo-nae.jpg";
 
