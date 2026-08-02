@@ -29,6 +29,15 @@ export const sendNotification = createServerFn({ method: "POST" })
     webpush.setVapidDetails("mailto:contact@nae-gifts.com", VAPID_PUBLIC_KEY, privateKey);
 
     const supabaseAdmin = getSupabaseAdmin();
+
+    // نسجّل الإشعار في قاعدة البيانات ليظهر لاحقاً داخل القائمة المنسدلة بالموقع،
+    // حتى للمستخدمين الذين لم يفعّلوا إشعارات المتصفح بعد.
+    await supabaseAdmin.from("notifications").insert({
+      title: data.title,
+      body: data.body,
+      url: data.url || null,
+    });
+
     const { data: subs, error } = await supabaseAdmin.from("push_subscriptions").select("*");
     if (error) throw new Error(error.message);
 
