@@ -39,8 +39,7 @@ function Index() {
           </div>
         </section>
 
-
-        {/* Categories */}
+        <EnableNotificationsButton />
         <section id="categories" className="mx-auto max-w-6xl px-4 py-10">
           <div className="mb-8 flex items-end justify-between">
             <div>
