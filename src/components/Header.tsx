@@ -1,11 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Facebook, Instagram, Menu, X } from "lucide-react";
+import { Facebook, Instagram, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import logo from "@/assets/logo-nae.jpg";
 import { FACEBOOK_URL, INSTAGRAM_URL, categories } from "@/lib/categories";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const { user } = useAuth();
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -25,6 +28,20 @@ export function Header() {
             <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="text-muted-foreground hover:text-primary"><Facebook className="h-5 w-5" /></a>
             <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary"><Instagram className="h-5 w-5" /></a>
           </div>
+          <div className="flex items-center gap-3 pr-3 border-r border-border">
+            {user ? (
+              <button
+                onClick={() => supabase.auth.signOut()}
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+              >
+                <LogOut className="h-4 w-4" /> تسجيل الخروج
+              </button>
+            ) : (
+              <Link to="/login" className="flex items-center gap-1 text-sm hover:text-primary">
+                <User className="h-4 w-4" /> تسجيل الدخول
+              </Link>
+            )}
+          </div>
         </nav>
 
         <button className="md:hidden" aria-label="القائمة" onClick={() => setOpen(!open)}>
@@ -42,6 +59,18 @@ export function Header() {
               </Link>
             ))}
             <Link to="/contact" className="py-2" onClick={() => setOpen(false)}>تواصل معنا</Link>
+            {user ? (
+              <button
+                onClick={() => { supabase.auth.signOut(); setOpen(false); }}
+                className="flex items-center gap-1 py-2 text-right text-muted-foreground"
+              >
+                <LogOut className="h-4 w-4" /> تسجيل الخروج
+              </button>
+            ) : (
+              <Link to="/login" className="flex items-center gap-1 py-2" onClick={() => setOpen(false)}>
+                <User className="h-4 w-4" /> تسجيل الدخول
+              </Link>
+            )}
             <div className="flex items-center gap-4 pt-3">
               <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer"><Facebook className="h-5 w-5" /></a>
               <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer"><Instagram className="h-5 w-5" /></a>
