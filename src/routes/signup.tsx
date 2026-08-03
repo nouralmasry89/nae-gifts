@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { supabase, whatsappToEmail, normalizeWhatsapp } from "@/lib/supabase";
 import { enablePushNotifications } from "@/lib/push-client";
+import { grantWelcomeDiscount } from "@/lib/api/welcome-discount.functions";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -71,6 +72,9 @@ function SignupPage() {
     // نحاول تفعيل الإشعارات تلقائيًا فور إنشاء الحساب. لو المتصفح رفض الإذن
     // (مثلاً على آيفون قديم) لا نوقف العملية — الزر سيظهر لاحقاً في الرئيسية كبديل.
     await enablePushNotifications().catch(() => {});
+    if (data.user) {
+      grantWelcomeDiscount({ data: { userId: data.user.id } }).catch(() => {});
+    }
     navigate({ to: "/" });
   };
 
