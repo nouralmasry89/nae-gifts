@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { supabase, whatsappToEmail, normalizeWhatsapp } from "@/lib/supabase";
 import { enablePushNotifications } from "@/lib/push-client";
+import { grantWelcomeDiscount } from "@/lib/api/welcome-discount.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -30,7 +31,7 @@ function LoginPage() {
     setLoading(true);
 
     const cleanWhatsapp = normalizeWhatsapp(whatsapp);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: whatsappToEmail(cleanWhatsapp),
       password,
     });
@@ -41,6 +42,9 @@ function LoginPage() {
       return;
     }
     await enablePushNotifications().catch(() => {});
+    if (signInData.user) {
+      grantWelcomeDiscount({ data: { userId: signInData.user.id } }).catch(() => {});
+    }
     navigate({ to: "/" });
   };
 
