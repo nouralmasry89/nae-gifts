@@ -8,6 +8,8 @@ export type Profile = {
   whatsapp: string;
   birthday: string | null;
   avatar_url: string | null;
+  has_discount: boolean;
+  discount_used: boolean;
 };
 
 export function useProfile() {
@@ -24,7 +26,7 @@ export function useProfile() {
     setLoading(true);
     const { data } = await supabase
       .from("profiles")
-      .select("id, name, whatsapp, birthday, avatar_url")
+      .select("id, name, whatsapp, birthday, avatar_url, has_discount, discount_used")
       .eq("id", user.id)
       .single();
     setProfile((data as Profile) ?? null);
