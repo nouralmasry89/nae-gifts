@@ -5,7 +5,9 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
-import { getProducts, formatPrice } from "@/lib/products";
+import { getProducts } from "@/lib/products";
+import { PriceDisplay } from "@/components/PriceDisplay";
+import { useDiscount } from "@/hooks/useDiscount";
 import { motherSubs } from "@/lib/motherSubs";
 import { graduationSubs } from "@/lib/graduationSubs";
 import { teacherSubs } from "@/lib/teacherSubs";
@@ -49,6 +51,7 @@ export const Route = createFileRoute("/category/$slug")({
 
 function CategoryPage() {
   const { category } = Route.useLoaderData();
+  const { active: discountActive } = useDiscount();
   const others = categories.filter((c) => c.slug !== category.slug).slice(0, 3);
   const orderMsg = `مرحباً، أود الاستفسار عن قسم: ${category.name}`;
   const products = getProducts(category.slug);
@@ -124,7 +127,9 @@ function CategoryPage() {
                       <Link to="/product/$id" params={{ id: p.id }} className="block">
                         <h3 className="text-sm font-bold line-clamp-2 hover:text-primary">{p.name}</h3>
                       </Link>
-                      <div className="mt-1 text-sm font-extrabold text-primary">{formatPrice(p)}</div>
+                      <div className="mt-1 text-sm font-extrabold text-primary">
+                        <PriceDisplay product={p} discountActive={discountActive} />
+                      </div>
                       <Link
                         to="/product/$id"
                         params={{ id: p.id }}
