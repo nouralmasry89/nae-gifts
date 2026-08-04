@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { CategoryCard } from "@/components/CategoryCard";
 import { categories, getCategory, waLink } from "@/lib/categories";
-import { getProducts } from "@/lib/products";
+import { getProductsMerged } from "@/lib/products-db";
 import { PriceDisplay } from "@/components/PriceDisplay";
 import { useDiscount } from "@/hooks/useDiscount";
 import { motherSubs } from "@/lib/motherSubs";
@@ -15,10 +15,11 @@ import { ramadanSubs } from "@/lib/ramadanSubs";
 import { newbornSubs } from "@/lib/newbornSubs";
 
 export const Route = createFileRoute("/category/$slug")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const category = getCategory(params.slug);
     if (!category) throw notFound();
-    return { category };
+    const products = await getProductsMerged(params.slug);
+    return { category, products };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -50,11 +51,10 @@ export const Route = createFileRoute("/category/$slug")({
 });
 
 function CategoryPage() {
-  const { category } = Route.useLoaderData();
+  const { category, products } = Route.useLoaderData();
   const { active: discountActive } = useDiscount();
   const others = categories.filter((c) => c.slug !== category.slug).slice(0, 3);
   const orderMsg = `مرحباً، أود الاستفسار عن قسم: ${category.name}`;
-  const products = getProducts(category.slug);
 
   return (
     <div className="min-h-screen">
