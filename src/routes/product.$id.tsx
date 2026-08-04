@@ -5,14 +5,15 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
 import { PriceDisplay } from "@/components/PriceDisplay";
-import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE, type SizeOption } from "@/lib/products";
+import { formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE, type SizeOption } from "@/lib/products";
+import { getProductMerged } from "@/lib/products-db";
 import { getCategory, waLink } from "@/lib/categories";
 import { useDiscount } from "@/hooks/useDiscount";
 import { applyDiscount } from "@/lib/discount";
 
 export const Route = createFileRoute("/product/$id")({
-  loader: ({ params }) => {
-    const product = getProduct(params.id);
+  loader: async ({ params }) => {
+    const product = await getProductMerged(params.id);
     if (!product) throw notFound();
     const category = getCategory(product.categorySlug);
     return { product, category };
