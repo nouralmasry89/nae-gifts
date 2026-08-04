@@ -13,6 +13,7 @@ export const sendNotification = createServerFn({ method: "POST" })
       title: z.string().min(1),
       body: z.string().min(1),
       url: z.string().optional(),
+      targetWhatsapp: z.string().optional(), // فارغ = للجميع، وإلا لمستخدم محدد فقط
     })
   )
   .handler(async ({ data }) => {
@@ -30,15 +31,36 @@ export const sendNotification = createServerFn({ method: "POST" })
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // نسجّل الإشعار في قاعدة البيانات ليظهر لاحقاً داخل القائمة المنسدلة بالموقع،
-    // حتى للمستخدمين الذين لم يفعّلوا إشعارات المتصفح بعد.
+    const cleanTarget = data.targetWhatsapp?.replace(/\D/g, "") || "";
+    let targetUserId: string | null = null;
+
+    if (cleanTarget) {
+      const { data: profileRow, error: profileErr } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("whatsapp", cleanTarget)
+        .single();
+
+      if (profileErr || !profileRow) {
+        throw new Error("لا يوجد مستخدم مسجّل بهذا الرقم.");
+      }
+      targetUserId = profileRow.id as string;
+    }
+
+    // نسجّل الإشعار في قاعدة البيانات ليظهر داخل القائمة المنسدلة بالموقع.
+    // user_id = null يعني إشعار عام يراه الجميع، وإلا يظهر فقط للمستخدم المحدد.
     await supabaseAdmin.from("notifications").insert({
       title: data.title,
       body: data.body,
       url: data.url || null,
+      user_id: targetUserId,
     });
 
-    const { data: subs, error } = await supabaseAdmin.from("push_subscriptions").select("*");
+    let subsQuery = supabaseAdmin.from("push_subscriptions").select("*");
+    if (targetUserId) {
+      subsQuery = subsQuery.eq("user_id", targetUserId);
+    }
+    const { data: subs, error } = await subsQuery;
     if (error) throw new Error(error.message);
 
     let sent = 0;
@@ -64,5 +86,5 @@ export const sendNotification = createServerFn({ method: "POST" })
       }
     }
 
-    return { sent, failed, total: subs?.length ?? 0 };
+    return { sent, failed, total: subs?.length ?? 0, targeted: !!targetUserId };
   });
