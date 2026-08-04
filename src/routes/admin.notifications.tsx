@@ -17,6 +17,7 @@ function AdminNotificationsPage() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [url, setUrl] = useState("");
+  const [targetWhatsapp, setTargetWhatsapp] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>("");
 
@@ -25,8 +26,17 @@ function AdminNotificationsPage() {
     setLoading(true);
     setResult("");
     try {
-      const res = await sendNotification({ data: { password, title, body, url: url || undefined } });
-      setResult(`تم الإرسال بنجاح ✅ — نجح: ${res.sent} / فشل: ${res.failed} / الإجمالي: ${res.total}`);
+      const res = await sendNotification({
+        data: {
+          password,
+          title,
+          body,
+          url: url || undefined,
+          targetWhatsapp: targetWhatsapp.trim() || undefined,
+        },
+      });
+      const scopeText = res.targeted ? "للمستخدم المحدد" : "لجميع المستخدمين";
+      setResult(`تم الإرسال بنجاح ✅ (${scopeText}) — نجح: ${res.sent} / فشل: ${res.failed} / الإجمالي: ${res.total}`);
     } catch (err: unknown) {
       setResult("خطأ: " + (err instanceof Error ? err.message : "حدث خطأ غير متوقع"));
     }
@@ -39,7 +49,7 @@ function AdminNotificationsPage() {
       <main className="mx-auto max-w-md px-4 py-12">
         <div className="mb-6 text-center">
           <Send className="mx-auto h-10 w-10 text-primary" />
-          <h1 className="mt-3 text-2xl font-extrabold">إرسال إشعار للمستخدمين</h1>
+          <h1 className="mt-3 text-2xl font-extrabold">إرسال إشعار</h1>
           <p className="mt-1 text-sm text-muted-foreground">هذه الصفحة لك فقط</p>
         </div>
 
@@ -52,6 +62,23 @@ function AdminNotificationsPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-bold">
+              رقم واتساب مستخدم محدد <span className="font-normal text-muted-foreground">(اختياري)</span>
+            </label>
+            <input
+              type="tel"
+              value={targetWhatsapp}
+              onChange={(e) => setTargetWhatsapp(e.target.value)}
+              placeholder="اتركه فارغاً للإرسال للجميع، أو اكتب رقم واتساب المستخدم"
+              dir="ltr"
+              className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              لو تركته فارغاً، سيصل الإشعار لكل المستخدمين المسجّلين.
+            </p>
           </div>
 
           <div>
@@ -97,7 +124,7 @@ function AdminNotificationsPage() {
             disabled={loading}
             className="w-full rounded-lg bg-primary px-6 py-3 text-base font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-60"
           >
-            {loading ? "جارٍ الإرسال..." : "إرسال الإشعار للجميع"}
+            {loading ? "جارٍ الإرسال..." : "إرسال الإشعار"}
           </button>
         </form>
       </main>
