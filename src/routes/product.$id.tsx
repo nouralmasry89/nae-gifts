@@ -4,8 +4,11 @@ import { MessageCircle, ArrowLeft } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFloat } from "@/components/WhatsAppFloat";
+import { PriceDisplay } from "@/components/PriceDisplay";
 import { getProduct, formatPrice, FLOWER_PRICING, FLOWER_BOUQUET_PRICE, type SizeOption } from "@/lib/products";
 import { getCategory, waLink } from "@/lib/categories";
+import { useDiscount } from "@/hooks/useDiscount";
+import { applyDiscount } from "@/lib/discount";
 
 export const Route = createFileRoute("/product/$id")({
   loader: ({ params }) => {
@@ -45,6 +48,7 @@ export const Route = createFileRoute("/product/$id")({
 
 function ProductPage() {
   const { product, category } = Route.useLoaderData();
+  const { active: discountActive, markDiscountUsed } = useDiscount();
   const [showForm, setShowForm] = useState(false);
   const isDowry = product.categorySlug === "dowry";
   const isFlowerRose = product.id === "flowers-1" || product.id === "flowers-2";
@@ -60,7 +64,7 @@ function ProductPage() {
   const gallery = product.gallery ?? [product.image];
   const [mainImage, setMainImage] = useState(product.image);
   const selectedSize = product.sizeOptions?.find((s: SizeOption) => s.label === boxSize);
-
+  const selectedSizeDiscounted = selectedSize ? applyDiscount(selectedSize.price, discountActive) : null;
 
   // Flowers rose-form state
   const [roseCount, setRoseCount] = useState<number>(12);
@@ -70,10 +74,14 @@ function ProductPage() {
   const rosesTotal = Math.max(0, roseCount) * FLOWER_PRICING.perRose;
   const ribbonTotal = ribbonText.trim() ? FLOWER_PRICING.ribbon : 0;
   const flowerTotal = rosesTotal + ribbonTotal + FLOWER_PRICING.wrapping;
+  const flowerTotalDiscounted = applyDiscount(flowerTotal, discountActive);
   const bouquetTotal = (bouquetPrice ?? 0) + ribbonTotal;
+  const bouquetTotalDiscounted = applyDiscount(bouquetTotal, discountActive);
 
   const productUrl =
     typeof window !== "undefined" ? window.location.href : "";
+
+  const discountNote = discountActive ? " (بعد خصم 10% الترحيبي الخاص بك)" : "";
 
   const baseLines =
     isFlowerRose || isFlowerBouquet
@@ -87,7 +95,7 @@ function ProductPage() {
       : [
           "مرحباً، أود طلب المنتج التالي:",
           `• المنتج: ${product.name} (${product.id})`,
-          `• السعر: ${formatPrice(product)}`,
+          `• السعر: ${formatPrice(product)}${discountNote}`,
           productUrl ? `• رابط المنتج (يحتوي الصورة): ${productUrl}` : null,
           "",
           "تفاصيل الطلب:",
@@ -101,17 +109,17 @@ function ProductPage() {
         `• لون الورد: ${roseColor}`,
         `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
         `• التغليف: ${FLOWER_PRICING.wrapping} ل.س`,
-        `• الكلفة الإجمالية: ${flowerTotal.toLocaleString("ar")} ل.س`,
+        `• الكلفة الإجمالية: ${flowerTotalDiscounted.toLocaleString("ar")} ل.س${discountNote}`,
       ]
     : isFlowerBouquet
     ? [
         `• سعر الباقة: ${(bouquetPrice ?? 0).toLocaleString("ar")} ل.س`,
         `• عبارة على شريط الساتان: ${ribbonText.trim() || "بدون"}${ribbonText.trim() ? ` (+${FLOWER_PRICING.ribbon} ل.س)` : ""}`,
-        `• الكلفة الإجمالية: ${bouquetTotal.toLocaleString("ar")} ل.س`,
+        `• الكلفة الإجمالية: ${bouquetTotalDiscounted.toLocaleString("ar")} ل.س${discountNote}`,
       ]
     : isDowry
     ? [
-        `• حجم الصندوق${product.sizeOptions ? "" : " / عدد الرزم"}: ${boxSize.trim() || "-"}${selectedSize ? ` — ${selectedSize.price.toLocaleString("ar")} ل.س جديدة` : ""}`,
+        `• حجم الصندوق${product.sizeOptions ? "" : " / عدد الرزم"}: ${boxSize.trim() || "-"}${selectedSize ? ` — ${(selectedSizeDiscounted ?? selectedSize.price).toLocaleString("ar")} ل.س جديدة${discountNote}` : ""}`,
         `• تاريخ المناسبة: ${date.trim() || "-"}`,
       ]
     : [
@@ -149,27 +157,32 @@ function ProductPage() {
               </div>
             </div>
             {gallery.length > 1 && (
-  <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:thin]">
-    {gallery.map((img: string, i: number) => (
-      <button
-        key={i}
-        onClick={() => setMainImage(img)}
-        className={`aspect-square w-[23%] shrink-0 snap-start overflow-hidden rounded-xl border-2 ${img === mainImage ? "border-primary" : "border-border"}`}
-        aria-label={`صورة ${i + 1}`}
-      >
-        <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
-      </button>
-    ))}
-  </div>
-)}
+              <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto scroll-smooth pb-1 [scrollbar-width:thin]">
+                {gallery.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => setMainImage(img)}
+                    className={`aspect-square w-[23%] shrink-0 snap-start overflow-hidden rounded-xl border-2 ${img === mainImage ? "border-primary" : "border-border"}`}
+                    aria-label={`صورة ${i + 1}`}
+                  >
+                    <img src={img} alt={`${product.name} — صورة ${i + 1}`} loading="lazy" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
 
           <div className="flex flex-col">
             <h1 className="text-2xl font-extrabold md:text-4xl">{product.name}</h1>
             <div className="mt-3 text-lg font-extrabold text-primary md:text-xl">
-              {formatPrice(product)}
+              <PriceDisplay product={product} discountActive={discountActive} />
             </div>
+            {discountActive && (
+              <div className="mt-2 inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                🎁 خصم 10% مطبّق حالياً على حسابك — لمرة واحدة
+              </div>
+            )}
             <p className="mt-4 whitespace-pre-line leading-relaxed text-muted-foreground">
               {product.description}
             </p>
@@ -243,7 +256,18 @@ function ProductPage() {
                           </tr>
                           <tr className="border-t-2 border-primary/40 bg-primary/5">
                             <td className="p-3 font-extrabold" colSpan={2}>الكلفة الإجمالية</td>
-                            <td className="p-3 text-lg font-extrabold text-primary">{flowerTotal.toLocaleString("ar")} ل.س</td>
+                            <td className="p-3 text-lg font-extrabold text-primary">
+                              {discountActive ? (
+                                <>
+                                  <span className="ml-1 text-muted-foreground/70 line-through">
+                                    {flowerTotal.toLocaleString("ar")}
+                                  </span>{" "}
+                                  {flowerTotalDiscounted.toLocaleString("ar")} ل.س
+                                </>
+                              ) : (
+                                <>{flowerTotal.toLocaleString("ar")} ل.س</>
+                              )}
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -280,7 +304,18 @@ function ProductPage() {
                         </tr>
                         <tr className="border-t-2 border-primary/40 bg-primary/5">
                           <td className="p-3 font-extrabold" colSpan={2}>المجموع</td>
-                          <td className="p-3 text-lg font-extrabold text-primary">{bouquetTotal.toLocaleString("ar")} ل.س</td>
+                          <td className="p-3 text-lg font-extrabold text-primary">
+                            {discountActive ? (
+                              <>
+                                <span className="ml-1 text-muted-foreground/70 line-through">
+                                  {bouquetTotal.toLocaleString("ar")}
+                                </span>{" "}
+                                {bouquetTotalDiscounted.toLocaleString("ar")} ل.س
+                              </>
+                            ) : (
+                              <>{bouquetTotal.toLocaleString("ar")} ل.س</>
+                            )}
+                          </td>
                         </tr>
                       </tbody>
                     </table>
@@ -308,7 +343,17 @@ function ProductPage() {
                             </select>
                             {selectedSize && (
                               <div className="mt-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-extrabold text-primary">
-                                السعر: {selectedSize.price.toLocaleString("ar")} ل.س جديدة
+                                {discountActive ? (
+                                  <>
+                                    السعر:{" "}
+                                    <span className="ml-1 text-muted-foreground/70 line-through">
+                                      {selectedSize.price.toLocaleString("ar")}
+                                    </span>{" "}
+                                    {selectedSizeDiscounted?.toLocaleString("ar")} ل.س جديدة
+                                  </>
+                                ) : (
+                                  <>السعر: {selectedSize.price.toLocaleString("ar")} ل.س جديدة</>
+                                )}
                               </div>
                             )}
                           </div>
@@ -347,6 +392,9 @@ function ProductPage() {
                   href={waLink(message)}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => {
+                    if (discountActive) markDiscountUsed();
+                  }}
                   className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-6 py-4 text-base font-bold text-primary-foreground transition hover:opacity-90"
                 >
                   <MessageCircle className="h-5 w-5" />
