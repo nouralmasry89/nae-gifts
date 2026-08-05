@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Package, Plus, Trash2, Pencil, Upload } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { supabase } from "@/lib/supabase";
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase";
 import { saveProduct, deleteProduct, listAdminProducts } from "@/lib/api/products-admin.functions";
 
 export const Route = createFileRoute("/admin/products")({
@@ -35,15 +35,28 @@ type AdminProductRow = {
 async function uploadImage(file: File): Promise<string> {
   const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  // بعض الصور القادمة من كاميرا/معرض الأندرويد بييجي نوعها (type) فارغ،
-  // فبنحدد نوع افتراضي صريح لتفادي خطأ "Invalid value" عند الرفع.
   const contentType = file.type && file.type.trim() !== "" ? file.type : "image/jpeg";
-  const { error } = await supabase.storage
-    .from("products")
-    .upload(path, file, { contentType, upsert: true });
-  if (error) throw new Error("فشل رفع الصورة: " + error.message);
-  const { data } = supabase.storage.from("products").getPublicUrl(path);
-  return data.publicUrl;
+
+  // بدل الاعتماد على supabase.storage.upload() اللي بيسبب خطأ "Headers: Invalid value"
+  // في بعض البيئات، بنرفع الصورة مباشرة عبر REST API بتاع Supabase.
+  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/products/${path}`;
+  const res = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      apikey: SUPABASE_ANON_KEY,
+      "Content-Type": contentType,
+      "x-upsert": "true",
+    },
+    body: file,
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => res.statusText);
+    throw new Error("فشل رفع الصورة: " + errText);
+  }
+
+  return `${SUPABASE_URL}/storage/v1/object/public/products/${path}`;
 }
 
 function AdminProductsPage() {
