@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import { Package, Plus, Trash2, Pencil, Upload } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase";
-import { saveProduct, deleteProduct, listAdminProducts } from "@/lib/api/products-admin.functions";
+import { saveProduct, deleteProduct, listAdminProducts, uploadProductImage } from "@/lib/api/products-admin.functions";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({ meta: [{ title: "إدارة المنتجات — N.A.E Gifts Store" }] }),
@@ -32,31 +31,25 @@ type AdminProductRow = {
   description: string | null;
 };
 
-async function uploadImage(file: File): Promise<string> {
-  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const contentType = file.type && file.type.trim() !== "" ? file.type : "image/jpeg";
-
-  // بدل الاعتماد على supabase.storage.upload() اللي بيسبب خطأ "Headers: Invalid value"
-  // في بعض البيئات، بنرفع الصورة مباشرة عبر REST API بتاع Supabase.
-  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/products/${path}`;
-  const res = await fetch(uploadUrl, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      apikey: SUPABASE_ANON_KEY,
-      "Content-Type": contentType,
-      "x-upsert": "true",
-    },
-    body: file,
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1] || "");
+    };
+    reader.onerror = () => reject(new Error("تعذّرت قراءة الملف"));
+    reader.readAsDataURL(file);
   });
+}
 
-  if (!res.ok) {
-    const errText = await res.text().catch(() => res.statusText);
-    throw new Error("فشل رفع الصورة: " + errText);
-  }
-
-  return `${SUPABASE_URL}/storage/v1/object/public/products/${path}`;
+async function uploadImage(file: File, password: string): Promise<string> {
+  const contentType = file.type && file.type.trim() !== "" ? file.type : "image/jpeg";
+  const base64Data = await fileToBase64(file);
+  const res = await uploadProductImage({
+    data: { password, fileName: file.name, contentType, base64Data },
+  });
+  return res.url;
 }
 
 function AdminProductsPage() {
@@ -169,7 +162,7 @@ function AdminProductsPage() {
     try {
       let imageUrl = existingImageUrl;
       if (mainImageFile) {
-        imageUrl = await uploadImage(mainImageFile);
+        imageUrl = await uploadImage(mainImageFile, password);
       }
       if (!imageUrl) {
         setSaving(false);
@@ -179,7 +172,7 @@ function AdminProductsPage() {
 
       let gallery = existingGallery;
       if (galleryFiles.length > 0) {
-        gallery = await Promise.all(galleryFiles.map((f) => uploadImage(f)));
+        gallery = await Promise.all(galleryFiles.map((f) => uploadImage(f, password)));
       }
 
       const res = await saveProduct({
