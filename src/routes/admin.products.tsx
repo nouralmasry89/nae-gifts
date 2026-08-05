@@ -33,9 +33,14 @@ type AdminProductRow = {
 };
 
 async function uploadImage(file: File): Promise<string> {
-  const ext = file.name.split(".").pop();
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-  const { error } = await supabase.storage.from("products").upload(path, file);
+  // بعض الصور القادمة من كاميرا/معرض الأندرويد بييجي نوعها (type) فارغ،
+  // فبنحدد نوع افتراضي صريح لتفادي خطأ "Invalid value" عند الرفع.
+  const contentType = file.type && file.type.trim() !== "" ? file.type : "image/jpeg";
+  const { error } = await supabase.storage
+    .from("products")
+    .upload(path, file, { contentType, upsert: true });
   if (error) throw new Error("فشل رفع الصورة: " + error.message);
   const { data } = supabase.storage.from("products").getPublicUrl(path);
   return data.publicUrl;
