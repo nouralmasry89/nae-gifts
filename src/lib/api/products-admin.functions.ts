@@ -13,7 +13,7 @@ const sizeOptionSchema = z.object({ label: z.string(), price: z.number() });
 
 const productInput = z.object({
   password: z.string(),
-  id: z.string().optional(), // موجود = تعديل منتج قائم، غير موجود = إضافة منتج جديد
+  id: z.string().optional(),
   categorySlug: z.string().min(1),
   name: z.string().min(1),
   imageUrl: z.string().min(1),
@@ -99,4 +99,11 @@ export const listAdminProducts = createServerFn({ method: "POST" })
   .inputValidator(z.object({ password: z.string() }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    const supabaseAdmin = getSupab
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data: rows, error } = await supabaseAdmin
+      .from("products")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return rows ?? [];
+  });
