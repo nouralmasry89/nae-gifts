@@ -25,6 +25,33 @@ const productInput = z.object({
   description: z.string().optional(),
 });
 
+export const uploadProductImage = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      password: z.string(),
+      fileName: z.string(),
+      contentType: z.string(),
+      base64Data: z.string(),
+    })
+  )
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const buffer = Buffer.from(data.base64Data, "base64");
+    const ext = (data.fileName.split(".").pop() || "jpg").toLowerCase();
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabaseAdmin.storage.from("products").upload(path, buffer, {
+      contentType: data.contentType || "image/jpeg",
+      upsert: true,
+    });
+    if (error) throw new Error(error.message);
+
+    const { data: pub } = supabaseAdmin.storage.from("products").getPublicUrl(path);
+    return { url: pub.publicUrl };
+  });
+
 export const saveProduct = createServerFn({ method: "POST" })
   .inputValidator(productInput)
   .handler(async ({ data }) => {
@@ -72,11 +99,4 @@ export const listAdminProducts = createServerFn({ method: "POST" })
   .inputValidator(z.object({ password: z.string() }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data: rows, error } = await supabaseAdmin
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return rows ?? [];
-  });
+    const supabaseAdmin = getSupab
