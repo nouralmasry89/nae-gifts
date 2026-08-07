@@ -108,3 +108,69 @@ export const listAdminProducts = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return rows ?? [];
   });
+export const migrateLegacyProducts = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      password: z.string(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+
+    const supabaseAdmin = getSupabaseAdmin();
+
+    let inserted = 0;
+    let skipped = 0;
+
+    for (const product of allProducts) {
+      // نبحث عن المنتج بالاسم والقسم لمنع التكرار
+      const { data: existing, error: findError } =
+        await supabaseAdmin
+          .from("products")
+          .select("id")
+          .eq("category", product.categorySlug)
+          .eq("name", product.name)
+          .maybeSingle();
+
+      if (findError) {
+        throw new Error(findError.message);
+      }
+
+      // المنتج موجود مسبقًا → نتجاوزه
+      if (existing) {
+        skipped++;
+        continue;
+      }
+
+      const row = {
+        category: product.categorySlug,
+        name: product.name,
+        image: product.image,
+        gallery: product.gallery ?? [],
+        price_new: product.priceNew ?? 0,
+        price_old: product.priceOld ?? 0,
+        price_note: product.priceNote || null,
+        size_options: product.sizeOptions ?? [],
+        description: product.description || "",
+      };
+
+      const { error: insertError } = await supabaseAdmin
+        .from("products")
+        .insert(row);
+
+      if (insertError) {
+        throw new Error(
+          `فشل نقل المنتج "${product.name}": ${insertError.message}`,
+        );
+      }
+
+      inserted++;
+    }
+
+    return {
+      ok: true,
+      inserted,
+      skipped,
+      total: allProducts.length,
+    };
+  });
