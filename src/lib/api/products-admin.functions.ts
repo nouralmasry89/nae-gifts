@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/supabase.server";
+import { allProducts } from "@/lib/products";
 
 function checkPassword(password: string) {
   const adminPassword = process.env.ADMIN_NOTIFY_PASSWORD;
