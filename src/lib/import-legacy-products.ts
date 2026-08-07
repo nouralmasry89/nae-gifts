@@ -10,7 +10,7 @@ export async function importLegacyProducts() {
 
   for (const product of allProducts) {
     try {
-      // نتحقق أولاً هل المنتج موجود مسبقاً
+      // التأكد من عدم استيراد المنتج نفسه مرتين
       const { data: existing, error: checkError } = await supabase
         .from("products")
         .select("id")
@@ -24,7 +24,6 @@ export async function importLegacyProducts() {
         continue;
       }
 
-      // إذا كان موجوداً، لا نكرره
       if (existing) {
         results.skipped++;
         continue;
@@ -34,7 +33,10 @@ export async function importLegacyProducts() {
         legacy_id: product.id,
         category: product.categorySlug,
         name: product.name,
+
+        // نحتفظ برابط الصورة الحالي كما هو
         image: product.image,
+
         gallery: product.gallery ?? [],
         price_new: product.priceNew,
         price_old: product.priceOld,
@@ -54,7 +56,9 @@ export async function importLegacyProducts() {
     } catch (error) {
       results.errors.push(
         `${product.name}: ${
-          error instanceof Error ? error.message : "خطأ غير معروف"
+          error instanceof Error
+            ? error.message
+            : "خطأ غير معروف"
         }`
       );
     }
