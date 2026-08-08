@@ -17,6 +17,7 @@ import {
   uploadProductImage,
 } from "@/lib/api/products-admin.functions";
 import { allProducts } from "@/lib/products";
+import { categories as staticCategories } from "@/lib/categories";
 import { categories } from "@/lib/categories";
 
 export const Route = createFileRoute("/admin/products")({
