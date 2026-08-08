@@ -1,5 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import type {
+  ChangeEvent,
+  FormEvent,
+} from "react";
 import {
   Package,
   Plus,
@@ -64,7 +72,7 @@ type AdminProductRow = {
   price_note: string | null;
   size_options: SizeOption[] | null;
   description: string | null;
-  legacy_id?: string | null;
+  legacy_id: string | null;
   source: "supabase" | "legacy";
 };
 
@@ -179,6 +187,12 @@ function AdminProductsPage() {
   const [editingId, setEditingId] =
     useState<string | null>(null);
 
+  /*
+   * هذا المتغير مهم جداً:
+   * عندما نعدل منتجاً قديماً من products.ts
+   * نخزن معرفه هنا حتى يتم ربطه بقاعدة البيانات
+   * بواسطة legacy_id.
+   */
   const [editingLegacyId, setEditingLegacyId] =
     useState<string | null>(null);
 
@@ -285,8 +299,10 @@ function AdminProductsPage() {
   /* =========================================================
      دمج المنتجات القديمة والجديدة
      
-     إذا كان المنتج القديم موجودًا في Supabase
-     بواسطة legacy_id، لا نعرض النسخة القديمة مرة ثانية.
+     المهم هنا:
+     إذا كان المنتج القديم موجوداً في Supabase
+     بواسطة legacy_id، لا نعرض النسخة القديمة
+     مرة ثانية.
   ========================================================= */
 
   const allAdminProducts =
@@ -296,8 +312,7 @@ function AdminProductsPage() {
           .map((p) => p.legacy_id)
           .filter(
             (id): id is string =>
-              typeof id === "string" &&
-              id.length > 0,
+              Boolean(id),
           ),
       );
 
@@ -305,7 +320,9 @@ function AdminProductsPage() {
         allProducts
           .filter(
             (p) =>
-              !migratedLegacyIds.has(p.id),
+              !migratedLegacyIds.has(
+                p.id,
+              ),
           )
           .map((p) => ({
             id: `legacy-${p.id}`,
@@ -320,7 +337,12 @@ function AdminProductsPage() {
               p.sizeOptions || null,
             description:
               p.description || null,
+
+            /*
+             * معرف المنتج الأصلي في products.ts
+             */
             legacy_id: p.id,
+
             source: "legacy",
           }));
 
@@ -338,6 +360,11 @@ function AdminProductsPage() {
 
   /* =========================================================
      الأقسام
+
+     نجمع:
+     1. الأقسام الموجودة في Supabase
+     2. الأقسام الموجودة في categories.ts
+     3. الأقسام الموجودة فعلياً في المنتجات
   ========================================================= */
 
   const categoryOptions =
@@ -349,53 +376,73 @@ function AdminProductsPage() {
           name: string;
           description: string;
           image: string;
-          source: "database" | "static";
+          source:
+            | "database"
+            | "static";
           id?: string;
         }
       >();
 
-      adminCategories.forEach((category) => {
-        map.set(category.slug, {
-          slug: category.slug,
-          name: category.name,
-          description:
-            category.description || "",
-          image: category.image || "",
-          source: "database",
-          id: category.id,
-        });
-      });
+      /* الأقسام الموجودة في قاعدة البيانات */
 
-      staticCategories.forEach((category) => {
-        if (!map.has(category.slug)) {
+      adminCategories.forEach(
+        (category) => {
           map.set(category.slug, {
             slug: category.slug,
             name: category.name,
             description:
-              category.description || "",
-            image: category.image || "",
-            source: "static",
+              category.description ||
+              "",
+            image:
+              category.image || "",
+            source: "database",
+            id: category.id,
           });
-        }
-      });
+        },
+      );
 
-      allAdminProducts.forEach((product) => {
-        if (!product.category) return;
+      /* الأقسام الثابتة في categories.ts */
 
-        if (!map.has(product.category)) {
-          map.set(product.category, {
-            slug: product.category,
-            name: getCategoryName(
-              product.category,
-            ),
-            description: "",
-            image: "",
-            source: "static",
-          });
-        }
-      });
+      staticCategories.forEach(
+        (category) => {
+          if (!map.has(category.slug)) {
+            map.set(category.slug, {
+              slug: category.slug,
+              name: category.name,
+              description:
+                category.description ||
+                "",
+              image:
+                category.image || "",
+              source: "static",
+            });
+          }
+        },
+      );
 
-      return Array.from(map.values());
+      /* أي قسم موجود في المنتجات */
+
+      allAdminProducts.forEach(
+        (product) => {
+          if (!product.category) return;
+
+          if (!map.has(product.category)) {
+            map.set(product.category, {
+              slug: product.category,
+              name: getCategoryName(
+                product.category,
+              ),
+              description: "",
+              image: "",
+              source: "static",
+            });
+          }
+        },
+      );
+
+      return Array.from(
+        map.values(),
+      );
     }, [
       adminCategories,
       allAdminProducts,
@@ -406,26 +453,16 @@ function AdminProductsPage() {
   ========================================================= */
 
   const handleUnlock = async (
-    e: React.FormEvent,
+    e: FormEvent,
   ) => {
     e.preventDefault();
 
-    setListError("");
+    await Promise.all([
+      loadProducts(password),
+      loadCategories(password),
+    ]);
 
-    try {
-      await Promise.all([
-        loadProducts(password),
-        loadCategories(password),
-      ]);
-
-      setUnlocked(true);
-    } catch (err) {
-      setListError(
-        err instanceof Error
-          ? err.message
-          : "كلمة السر غير صحيحة.",
-      );
-    }
+    setUnlocked(true);
   };
 
   /* =========================================================
@@ -462,6 +499,12 @@ function AdminProductsPage() {
 
   /* =========================================================
      تعديل منتج
+     
+     الآن المنتجات القديمة قابلة للتعديل.
+     
+     إذا كان المنتج من products.ts:
+     نخزن legacy_id ونقوم بإنشائه في Supabase
+     عند الضغط على حفظ.
   ========================================================= */
 
   const startEdit = (
@@ -475,12 +518,17 @@ function AdminProductsPage() {
 
     setEditingLegacyId(
       p.source === "legacy"
-        ? p.legacy_id || null
-        : p.legacy_id || null,
+        ? p.legacy_id
+        : null,
     );
 
-    setCategorySlug(p.category);
-    setName(p.name);
+    setCategorySlug(
+      p.category,
+    );
+
+    setName(
+      p.name,
+    );
 
     setPriceNew(
       p.price_new !== null &&
@@ -522,13 +570,7 @@ function AdminProductsPage() {
     setGalleryFiles([]);
     setGalleryPreviews([]);
 
-    setFormMessage({
-      ok: true,
-      text:
-        p.source === "legacy"
-          ? "هذا المنتج قديم. عند حفظه سيتم نقله إلى قاعدة البيانات ليصبح قابلاً للإدارة من لوحة التحكم."
-          : "يمكنك تعديل المنتج وحفظ التغييرات.",
-    });
+    setFormMessage(null);
 
     window.scrollTo({
       top: 0,
@@ -541,7 +583,7 @@ function AdminProductsPage() {
   ========================================================= */
 
   const handleMainImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: ChangeEvent<HTMLInputElement>,
   ) => {
     const file =
       e.target.files?.[0];
@@ -560,7 +602,7 @@ function AdminProductsPage() {
   ========================================================= */
 
   const handleGalleryChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: ChangeEvent<HTMLInputElement>,
   ) => {
     const files = Array.from(
       e.target.files || [],
@@ -591,7 +633,9 @@ function AdminProductsPage() {
 
   const updateSizeOption = (
     i: number,
-    field: "label" | "price",
+    field:
+      | "label"
+      | "price",
     value: string,
   ) => {
     const copy = [
@@ -614,27 +658,32 @@ function AdminProductsPage() {
   ) => {
     setSizeOptions(
       sizeOptions.filter(
-        (_, idx) => idx !== i,
+        (_, idx) =>
+          idx !== i,
       ),
     );
   };
 
   /* =========================================================
      حفظ المنتج
+     
+     هناك الآن ثلاث حالات:
+     
+     1. editingId موجود
+        -> تعديل منتج موجود في Supabase.
+     
+     2. editingLegacyId موجود
+        -> نقل/حفظ المنتج القديم إلى Supabase
+           مع legacy_id.
+     
+     3. لا يوجد أي منهما
+        -> إضافة منتج جديد.
   ========================================================= */
 
   const handleSave = async (
-    e: React.FormEvent,
+    e: FormEvent,
   ) => {
     e.preventDefault();
-
-    if (!name.trim()) {
-      setFormMessage({
-        ok: false,
-        text: "اسم المنتج مطلوب.",
-      });
-      return;
-    }
 
     setSaving(true);
     setFormMessage(null);
@@ -643,6 +692,10 @@ function AdminProductsPage() {
       let imageUrl =
         existingImageUrl;
 
+      /*
+       * إذا اختار المستخدم صورة جديدة
+       * نرفعها أولاً.
+       */
       if (mainImageFile) {
         imageUrl =
           await uploadImage(
@@ -662,6 +715,9 @@ function AdminProductsPage() {
         return;
       }
 
+      /*
+       * الصور الإضافية
+       */
       let gallery =
         existingGallery;
 
@@ -680,29 +736,34 @@ function AdminProductsPage() {
           );
       }
 
+      /*
+       * حفظ المنتج
+       */
       const res =
         await saveProduct({
           data: {
             password,
 
             /*
-             * إذا كان المنتج موجودًا في Supabase
+             * إذا كان منتجاً موجوداً في Supabase
              * نرسل id.
+             *
+             * إذا كان منتجاً قديماً
+             * لا نرسل id، بل نرسل legacyId.
              */
             id:
               editingId ||
               undefined,
 
-            /*
-             * إذا كان المنتج قديمًا
-             * نرسل legacyId.
-             */
             legacyId:
               editingLegacyId ||
               undefined,
 
-            categorySlug,
-            name: name.trim(),
+            categorySlug:
+              categorySlug,
+
+            name:
+              name.trim(),
 
             imageUrl,
 
@@ -733,17 +794,40 @@ function AdminProductsPage() {
           },
         });
 
-      setFormMessage({
-        ok: true,
-        text: editingId
-          ? "تم تحديث المنتج ✅"
-          : editingLegacyId
-            ? "تم نقل المنتج القديم إلى قاعدة البيانات وتحديثه ✅"
-            : `تم إضافة المنتج ✅ (المعرّف: ${res.id})`,
-      });
+      /*
+       * رسالة مناسبة لكل حالة
+       */
+      if (editingLegacyId) {
+        setFormMessage({
+          ok: true,
+          text:
+            "تم نقل المنتج القديم إلى قاعدة البيانات وحفظ تعديلاته بنجاح ✅",
+        });
+      } else if (editingId) {
+        setFormMessage({
+          ok: true,
+          text:
+            "تم تحديث المنتج بنجاح ✅",
+        });
+      } else {
+        setFormMessage({
+          ok: true,
+          text:
+            `تم إضافة المنتج بنجاح ✅ (المعرّف: ${res.id})`,
+        });
+      }
 
+      /*
+       * إعادة ضبط الفورم
+       */
       resetForm();
 
+      /*
+       * إعادة تحميل المنتجات
+       *
+       * هنا سيختفي المنتج القديم تلقائياً
+       * لأن allAdminProducts يتعرف على legacy_id.
+       */
       await loadProducts(
         password,
       );
@@ -767,9 +851,25 @@ function AdminProductsPage() {
   const handleDelete = async (
     p: AdminProductRow,
   ) => {
+    /*
+     * المنتج القديم الذي لم يتم نقله بعد
+     * لا يمكن حذفه من Supabase لأنه غير موجود هناك.
+     *
+     * أما بعد نقله سيظهر كمصدر Supabase
+     * ويمكن حذفه بشكل طبيعي.
+     */
+    if (
+      p.source === "legacy"
+    ) {
+      alert(
+        "هذا المنتج موجود حالياً داخل products.ts ولم يتم نقله إلى قاعدة البيانات بعد. يمكنك تعديله وحفظه أولاً، وعندها سيصبح قابلاً للحذف من لوحة التحكم.",
+      );
+      return;
+    }
+
     if (
       !confirm(
-        `هل أنت متأكد من حذف المنتج "${p.name}"؟\n\nلا يمكن التراجع عن هذه العملية.`,
+        "متأكد من حذف هذا المنتج؟ لا يمكن التراجع.",
       )
     ) {
       return;
@@ -779,36 +879,13 @@ function AdminProductsPage() {
       await deleteProduct({
         data: {
           password,
-
-          /*
-           * المنتج الموجود في Supabase
-           */
-          id:
-            p.source === "supabase"
-              ? p.id
-              : undefined,
-
-          /*
-           * المنتج القديم
-           */
-          legacyId:
-            p.source === "legacy"
-              ? p.legacy_id
-              : undefined,
+          id: p.id,
         },
       });
 
       await loadProducts(
         password,
       );
-
-      if (
-        editingId === p.id ||
-        editingLegacyId ===
-          p.legacy_id
-      ) {
-        resetForm();
-      }
     } catch (err) {
       alert(
         err instanceof Error
@@ -864,7 +941,7 @@ function AdminProductsPage() {
 
   const handleSaveCategory =
     async (
-      e: React.FormEvent,
+      e: FormEvent,
     ) => {
       e.preventDefault();
 
@@ -1119,11 +1196,20 @@ function AdminProductsPage() {
 
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-2xl font-extrabold">
-                {allProducts.length}
+                {
+                  allProducts.filter(
+                    (p) =>
+                      !supabaseProducts.some(
+                        (db) =>
+                          db.legacy_id ===
+                          p.id,
+                      ),
+                  ).length
+                }
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
-                المنتجات الأصلية
+                المنتجات القديمة
               </div>
             </div>
 
@@ -1135,7 +1221,7 @@ function AdminProductsPage() {
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
-                المنتجات في قاعدة البيانات
+                المنتجات الجديدة
               </div>
             </div>
 
@@ -1469,26 +1555,21 @@ function AdminProductsPage() {
         >
 
           <div className="flex items-center justify-between gap-3">
+
             <h2 className="text-lg font-bold">
-              {editingId ||
-              editingLegacyId
+              {editingId
                 ? "تعديل منتج"
-                : "إضافة منتج جديد"}
+                : editingLegacyId
+                  ? "تعديل منتج قديم"
+                  : "إضافة منتج جديد"}
             </h2>
 
-            {(editingId ||
-              editingLegacyId) && (
-              <button
-                type="button"
-                onClick={
-                  resetForm
-                }
-                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary"
-              >
-                <X className="h-4 w-4" />
-                إلغاء التعديل
-              </button>
+            {editingLegacyId && (
+              <span className="rounded-full bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-600">
+                سيتم نقله إلى قاعدة البيانات عند الحفظ
+              </span>
             )}
+
           </div>
 
           <div>
@@ -1815,10 +1896,11 @@ function AdminProductsPage() {
 
               {saving
                 ? "جارٍ الحفظ..."
-                : editingId ||
-                    editingLegacyId
+                : editingId
                   ? "حفظ التعديلات"
-                  : "إضافة المنتج"}
+                  : editingLegacyId
+                    ? "حفظ ونقل إلى قاعدة البيانات"
+                    : "إضافة المنتج"}
             </button>
 
             {(editingId ||
@@ -1949,7 +2031,11 @@ function AdminProductsPage() {
                                   {p.source ===
                                   "legacy" ? (
                                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                                      منتج قديم
+                                      منتج قديم — قابل للنقل والتعديل
+                                    </span>
+                                  ) : p.legacy_id ? (
+                                    <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                      منتج قديم تم نقله
                                     </span>
                                   ) : (
                                     <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
