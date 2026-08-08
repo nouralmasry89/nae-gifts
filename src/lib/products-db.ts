@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+
 import {
   getProducts,
   getProduct,
@@ -15,7 +16,10 @@ type DbProductRow = {
   price_old: number | null;
   price_note: string | null;
   size_options:
-    | { label: string; price: number }[]
+    | {
+        label: string;
+        price: number;
+      }[]
     | null;
   description: string | null;
   legacy_id: string | null;
@@ -26,25 +30,37 @@ function rowToProduct(
 ): Product {
   return {
     id: row.id,
-    categorySlug: row.category,
+
+    categorySlug:
+      row.category,
+
     name: row.name,
-    image: row.image,
+
+    image:
+      row.image,
+
     gallery:
       row.gallery &&
       row.gallery.length > 0
         ? row.gallery
         : undefined,
+
     sizeOptions:
       row.size_options &&
       row.size_options.length > 0
         ? row.size_options
         : undefined,
+
     priceNote:
-      row.price_note || undefined,
+      row.price_note ||
+      undefined,
+
     priceNew:
       row.price_new ?? 0,
+
     priceOld:
       row.price_old ?? 0,
+
     description:
       row.description || "",
   };
@@ -67,8 +83,10 @@ export async function fetchDbProducts(
     );
   }
 
-  const { data, error } =
-    await query;
+  const {
+    data,
+    error,
+  } = await query;
 
   if (error || !data) {
     return [];
@@ -82,12 +100,13 @@ export async function fetchDbProducts(
 export async function fetchDbProduct(
   id: string,
 ): Promise<Product | undefined> {
-  const { data } =
-    await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+  const {
+    data,
+  } = await supabase
+    .from("products")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
 
   if (!data) {
     return undefined;
@@ -98,10 +117,11 @@ export async function fetchDbProduct(
   );
 }
 
-/* =========================================================
-   دمج المنتجات القديمة والجديدة بدون تكرار
-========================================================= */
-
+/*
+ * =========================================================
+ * دمج المنتجات القديمة مع المنتجات الموجودة في قاعدة البيانات
+ * =========================================================
+ */
 export async function getProductsMerged(
   slug: string,
 ): Promise<Product[]> {
@@ -111,61 +131,26 @@ export async function getProductsMerged(
   const dbList =
     await fetchDbProducts(slug);
 
-  /*
-   * المنتجات القديمة التي تم نقلها إلى
-   * قاعدة البيانات تحتوي على legacy_id.
-   *
-   * هنا نحتاج معرفة legacy IDs الموجودة
-   * حتى لا يظهر المنتج مرتين.
-   */
-
-  const { data: migratedRows } =
-    await supabase
-      .from("products")
-      .select("legacy_id")
-      .eq("category", slug)
-      .not("legacy_id", "is", null);
-
-  const migratedIds = new Set(
-    (migratedRows ?? [])
-      .map(
-        (row) => row.legacy_id,
-      )
-      .filter(Boolean),
-  );
-
-  const remainingStatic =
-    staticList.filter(
-      (product) =>
-        !migratedIds.has(
-          product.id,
-        ),
-    );
-
   return [
-    ...remainingStatic,
+    ...staticList,
     ...dbList,
   ];
 }
 
-/* =========================================================
-   البحث عن منتج
-========================================================= */
-
+/*
+ * =========================================================
+ * البحث عن منتج
+ * =========================================================
+ */
 export async function getProductMerged(
   id: string,
 ): Promise<Product | undefined> {
-  /*
-   * نعطي الأولوية لقاعدة البيانات.
-   * هذا مهم جدًا بعد تعديل منتج قديم.
-   */
+  const staticProduct =
+    getProduct(id);
 
-  const dbProduct =
-    await fetchDbProduct(id);
-
-  if (dbProduct) {
-    return dbProduct;
+  if (staticProduct) {
+    return staticProduct;
   }
 
-  return getProduct(id);
+  return fetchDbProduct(id);
 }
