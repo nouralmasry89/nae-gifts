@@ -32,19 +32,30 @@ import {
   listAdminCategories,
   saveCategory,
   deleteCategory,
+  uploadCategoryImage,
 } from "@/lib/api/categories-admin.functions";
 
 import { allProducts } from "@/lib/products";
 import { categories as staticCategories } from "@/lib/categories";
 
-export const Route = createFileRoute("/admin/products")({
+export const Route = createFileRoute(
+  "/admin/products",
+)({
   head: () => ({
-    meta: [{ title: "إدارة المنتجات — N.A.E Gifts Store" }],
+    meta: [
+      {
+        title:
+          "إدارة المنتجات — N.A.E Gifts Store",
+      },
+    ],
   }),
   component: AdminProductsPage,
 });
 
-const CATEGORY_NAMES: Record<string, string> = {
+const CATEGORY_NAMES: Record<
+  string,
+  string
+> = {
   rings: "ستاندات محابس",
   dowry: "صناديق مهر و هدايا",
   flowers: "باقات ورد صناعي",
@@ -85,45 +96,101 @@ type AdminCategory = {
   created_at?: string;
 };
 
-function getCategoryName(slug: string): string {
+function getCategoryName(
+  slug: string,
+): string {
   return CATEGORY_NAMES[slug] || slug;
 }
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+/* =========================================================
+   تحويل الملف إلى Base64
+========================================================= */
 
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.split(",")[1] || "");
-    };
+function fileToBase64(
+  file: File,
+): Promise<string> {
+  return new Promise(
+    (resolve, reject) => {
+      const reader =
+        new FileReader();
 
-    reader.onerror = () =>
-      reject(new Error("تعذّرت قراءة الملف"));
+      reader.onload = () => {
+        const result =
+          reader.result as string;
 
-    reader.readAsDataURL(file);
-  });
+        resolve(
+          result.split(",")[1] || "",
+        );
+      };
+
+      reader.onerror = () =>
+        reject(
+          new Error(
+            "تعذّرت قراءة الملف",
+          ),
+        );
+
+      reader.readAsDataURL(file);
+    },
+  );
 }
+
+/* =========================================================
+   رفع صورة منتج
+========================================================= */
 
 async function uploadImage(
   file: File,
   password: string,
 ): Promise<string> {
   const contentType =
-    file.type && file.type.trim() !== ""
+    file.type &&
+    file.type.trim() !== ""
       ? file.type
       : "image/jpeg";
 
-  const base64Data = await fileToBase64(file);
+  const base64Data =
+    await fileToBase64(file);
 
-  const res = await uploadProductImage({
-    data: {
-      password,
-      fileName: file.name,
-      contentType,
-      base64Data,
-    },
-  });
+  const res =
+    await uploadProductImage({
+      data: {
+        password,
+        fileName: file.name,
+        contentType,
+        base64Data,
+      },
+    });
+
+  return res.url;
+}
+
+/* =========================================================
+   رفع صورة قسم
+========================================================= */
+
+async function uploadCategoryImageFile(
+  file: File,
+  password: string,
+): Promise<string> {
+  const contentType =
+    file.type &&
+    file.type.trim() !== ""
+      ? file.type
+      : "image/jpeg";
+
+  const base64Data =
+    await fileToBase64(file);
+
+  const res =
+    await uploadCategoryImage({
+      data: {
+        password,
+        fileName: file.name,
+        contentType,
+        base64Data,
+      },
+    });
 
   return res.url;
 }
@@ -133,188 +200,282 @@ function AdminProductsPage() {
      كلمة السر
   ========================================================= */
 
-  const [password, setPassword] = useState("");
-  const [unlocked, setUnlocked] = useState(false);
+  const [password, setPassword] =
+    useState("");
+
+  const [unlocked, setUnlocked] =
+    useState(false);
 
   /* =========================================================
      المنتجات
   ========================================================= */
 
-  const [supabaseProducts, setSupabaseProducts] =
-    useState<AdminProductRow[]>([]);
+  const [
+    supabaseProducts,
+    setSupabaseProducts,
+  ] = useState<
+    AdminProductRow[]
+  >([]);
 
-  const [loadingList, setLoadingList] =
-    useState(false);
+  const [
+    loadingList,
+    setLoadingList,
+  ] = useState(false);
 
-  const [listError, setListError] =
-    useState("");
+  const [
+    listError,
+    setListError,
+  ] = useState("");
 
   /* =========================================================
      الأقسام
   ========================================================= */
 
-  const [adminCategories, setAdminCategories] =
-    useState<AdminCategory[]>([]);
+  const [
+    adminCategories,
+    setAdminCategories,
+  ] = useState<
+    AdminCategory[]
+  >([]);
 
-  const [categoryEditingId, setCategoryEditingId] =
-    useState<string | null>(null);
+  const [
+    categoryEditingId,
+    setCategoryEditingId,
+  ] = useState<
+    string | null
+  >(null);
 
-  const [categorySlugInput, setCategorySlugInput] =
-    useState("");
+  const [
+    categorySlugInput,
+    setCategorySlugInput,
+  ] = useState("");
 
-  const [categoryNameInput, setCategoryNameInput] =
-    useState("");
+  const [
+    categoryNameInput,
+    setCategoryNameInput,
+  ] = useState("");
 
-  const [categoryDescriptionInput, setCategoryDescriptionInput] =
-    useState("");
+  const [
+    categoryDescriptionInput,
+    setCategoryDescriptionInput,
+  ] = useState("");
 
-  const [categoryImageInput, setCategoryImageInput] =
-    useState("");
+  /*
+   * رابط الصورة الموجود حالياً
+   * في قاعدة البيانات.
+   */
+  const [
+    categoryExistingImage,
+    setCategoryExistingImage,
+  ] = useState("");
 
-  const [categorySaving, setCategorySaving] =
-    useState(false);
+  /*
+   * ملف الصورة الجديدة.
+   */
+  const [
+    categoryImageFile,
+    setCategoryImageFile,
+  ] = useState<File | null>(
+    null,
+  );
 
-  const [categoryMessage, setCategoryMessage] =
-    useState<{
-      ok: boolean;
-      text: string;
-    } | null>(null);
+  /*
+   * معاينة الصورة.
+   */
+  const [
+    categoryImagePreview,
+    setCategoryImagePreview,
+  ] = useState("");
+
+  const [
+    categorySaving,
+    setCategorySaving,
+  ] = useState(false);
+
+  const [
+    categoryMessage,
+    setCategoryMessage,
+  ] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
 
   /* =========================================================
      فورم المنتج
   ========================================================= */
 
-  const [editingId, setEditingId] =
-    useState<string | null>(null);
+  const [
+    editingId,
+    setEditingId,
+  ] = useState<string | null>(
+    null,
+  );
 
-  /*
-   * هذا المتغير مهم جداً:
-   * عندما نعدل منتجاً قديماً من products.ts
-   * نخزن معرفه هنا حتى يتم ربطه بقاعدة البيانات
-   * بواسطة legacy_id.
-   */
-  const [editingLegacyId, setEditingLegacyId] =
-    useState<string | null>(null);
+  const [
+    editingLegacyId,
+    setEditingLegacyId,
+  ] = useState<
+    string | null
+  >(null);
 
-  const [categorySlug, setCategorySlug] =
-    useState("rings");
+  const [
+    categorySlug,
+    setCategorySlug,
+  ] = useState("rings");
 
   const [name, setName] =
     useState("");
 
-  const [priceNew, setPriceNew] =
-    useState("");
+  const [
+    priceNew,
+    setPriceNew,
+  ] = useState("");
 
-  const [priceOld, setPriceOld] =
-    useState("");
+  const [
+    priceOld,
+    setPriceOld,
+  ] = useState("");
 
-  const [priceNote, setPriceNote] =
-    useState("");
+  const [
+    priceNote,
+    setPriceNote,
+  ] = useState("");
 
-  const [description, setDescription] =
-    useState("");
+  const [
+    description,
+    setDescription,
+  ] = useState("");
 
-  const [sizeOptions, setSizeOptions] =
-    useState<SizeOption[]>([]);
+  const [
+    sizeOptions,
+    setSizeOptions,
+  ] = useState<
+    SizeOption[]
+  >([]);
 
-  const [mainImageFile, setMainImageFile] =
-    useState<File | null>(null);
+  const [
+    mainImageFile,
+    setMainImageFile,
+  ] = useState<File | null>(
+    null,
+  );
 
-  const [mainImagePreview, setMainImagePreview] =
-    useState("");
+  const [
+    mainImagePreview,
+    setMainImagePreview,
+  ] = useState("");
 
-  const [galleryFiles, setGalleryFiles] =
-    useState<File[]>([]);
+  const [
+    galleryFiles,
+    setGalleryFiles,
+  ] = useState<File[]>([]);
 
-  const [galleryPreviews, setGalleryPreviews] =
-    useState<string[]>([]);
+  const [
+    galleryPreviews,
+    setGalleryPreviews,
+  ] = useState<string[]>([]);
 
-  const [existingImageUrl, setExistingImageUrl] =
-    useState("");
+  const [
+    existingImageUrl,
+    setExistingImageUrl,
+  ] = useState("");
 
-  const [existingGallery, setExistingGallery] =
-    useState<string[]>([]);
+  const [
+    existingGallery,
+    setExistingGallery,
+  ] = useState<string[]>([]);
 
-  const [saving, setSaving] =
-    useState(false);
+  const [
+    saving,
+    setSaving,
+  ] = useState(false);
 
-  const [formMessage, setFormMessage] =
-    useState<{
-      ok: boolean;
-      text: string;
-    } | null>(null);
+  const [
+    formMessage,
+    setFormMessage,
+  ] = useState<{
+    ok: boolean;
+    text: string;
+  } | null>(null);
 
   /* =========================================================
      تحميل المنتجات
   ========================================================= */
 
-  const loadProducts = async (pwd: string) => {
-    setLoadingList(true);
-    setListError("");
+  const loadProducts =
+    async (pwd: string) => {
+      setLoadingList(true);
+      setListError("");
 
-    try {
-      const rows = await listAdminProducts({
-        data: {
-          password: pwd,
-        },
-      });
+      try {
+        const rows =
+          await listAdminProducts({
+            data: {
+              password: pwd,
+            },
+          });
 
-      setSupabaseProducts(
-        rows as AdminProductRow[],
-      );
-    } catch (err) {
-      setListError(
-        err instanceof Error
-          ? err.message
-          : "حدث خطأ أثناء تحميل المنتجات",
-      );
-    } finally {
-      setLoadingList(false);
-    }
-  };
+        setSupabaseProducts(
+          rows as AdminProductRow[],
+        );
+      } catch (err) {
+        setListError(
+          err instanceof Error
+            ? err.message
+            : "حدث خطأ أثناء تحميل المنتجات",
+        );
+      } finally {
+        setLoadingList(false);
+      }
+    };
 
   /* =========================================================
      تحميل الأقسام
   ========================================================= */
 
-  const loadCategories = async (pwd: string) => {
-    try {
-      const rows = await listAdminCategories({
-        data: {
-          password: pwd,
-        },
-      });
+  const loadCategories =
+    async (pwd: string) => {
+      try {
+        const rows =
+          await listAdminCategories({
+            data: {
+              password: pwd,
+            },
+          });
 
-      setAdminCategories(
-        rows as AdminCategory[],
-      );
-    } catch (err) {
-      console.error(
-        "تعذر تحميل الأقسام:",
-        err,
-      );
-    }
-  };
+        setAdminCategories(
+          rows as AdminCategory[],
+        );
+      } catch (err) {
+        console.error(
+          "تعذر تحميل الأقسام:",
+          err,
+        );
+      }
+    };
 
   /* =========================================================
      دمج المنتجات القديمة والجديدة
-     
-     المهم هنا:
-     إذا كان المنتج القديم موجوداً في Supabase
-     بواسطة legacy_id، لا نعرض النسخة القديمة
-     مرة ثانية.
   ========================================================= */
 
   const allAdminProducts =
-    useMemo<AdminProductRow[]>(() => {
-      const migratedLegacyIds = new Set(
-        supabaseProducts
-          .map((p) => p.legacy_id)
-          .filter(
-            (id): id is string =>
-              Boolean(id),
-          ),
-      );
+    useMemo<
+      AdminProductRow[]
+    >(() => {
+      const migratedLegacyIds =
+        new Set(
+          supabaseProducts
+            .map(
+              (p) =>
+                p.legacy_id,
+            )
+            .filter(
+              (
+                id,
+              ): id is string =>
+                Boolean(id),
+            ),
+        );
 
       const legacyProducts: AdminProductRow[] =
         allProducts
@@ -326,31 +487,39 @@ function AdminProductsPage() {
           )
           .map((p) => ({
             id: `legacy-${p.id}`,
-            category: p.categorySlug,
+            category:
+              p.categorySlug,
             name: p.name,
             image: p.image,
-            gallery: p.gallery || null,
-            price_new: p.priceNew ?? 0,
-            price_old: p.priceOld ?? 0,
-            price_note: p.priceNote || null,
+            gallery:
+              p.gallery || null,
+            price_new:
+              p.priceNew ?? 0,
+            price_old:
+              p.priceOld ?? 0,
+            price_note:
+              p.priceNote ||
+              null,
             size_options:
-              p.sizeOptions || null,
+              p.sizeOptions ||
+              null,
             description:
-              p.description || null,
-
-            /*
-             * معرف المنتج الأصلي في products.ts
-             */
-            legacy_id: p.id,
-
-            source: "legacy",
+              p.description ||
+              null,
+            legacy_id:
+              p.id,
+            source:
+              "legacy",
           }));
 
       const newProducts: AdminProductRow[] =
-        supabaseProducts.map((p) => ({
-          ...p,
-          source: "supabase",
-        }));
+        supabaseProducts.map(
+          (p) => ({
+            ...p,
+            source:
+              "supabase",
+          }),
+        );
 
       return [
         ...legacyProducts,
@@ -360,82 +529,105 @@ function AdminProductsPage() {
 
   /* =========================================================
      الأقسام
-
-     نجمع:
-     1. الأقسام الموجودة في Supabase
-     2. الأقسام الموجودة في categories.ts
-     3. الأقسام الموجودة فعلياً في المنتجات
   ========================================================= */
 
   const categoryOptions =
     useMemo(() => {
-      const map = new Map<
-        string,
-        {
-          slug: string;
-          name: string;
-          description: string;
-          image: string;
-          source:
-            | "database"
-            | "static";
-          id?: string;
-        }
-      >();
-
-      /* الأقسام الموجودة في قاعدة البيانات */
+      const map =
+        new Map<
+          string,
+          {
+            slug: string;
+            name: string;
+            description: string;
+            image: string;
+            source:
+              | "database"
+              | "static";
+            id?: string;
+          }
+        >();
 
       adminCategories.forEach(
         (category) => {
-          map.set(category.slug, {
-            slug: category.slug,
-            name: category.name,
-            description:
-              category.description ||
-              "",
-            image:
-              category.image || "",
-            source: "database",
-            id: category.id,
-          });
-        },
-      );
-
-      /* الأقسام الثابتة في categories.ts */
-
-      staticCategories.forEach(
-        (category) => {
-          if (!map.has(category.slug)) {
-            map.set(category.slug, {
-              slug: category.slug,
-              name: category.name,
+          map.set(
+            category.slug,
+            {
+              slug:
+                category.slug,
+              name:
+                category.name,
               description:
                 category.description ||
                 "",
               image:
-                category.image || "",
-              source: "static",
-            });
+                category.image ||
+                "",
+              source:
+                "database",
+              id:
+                category.id,
+            },
+          );
+        },
+      );
+
+      staticCategories.forEach(
+        (category) => {
+          if (
+            !map.has(
+              category.slug,
+            )
+          ) {
+            map.set(
+              category.slug,
+              {
+                slug:
+                  category.slug,
+                name:
+                  category.name,
+                description:
+                  category.description ||
+                  "",
+                image:
+                  category.image ||
+                  "",
+                source:
+                  "static",
+              },
+            );
           }
         },
       );
 
-      /* أي قسم موجود في المنتجات */
-
       allAdminProducts.forEach(
         (product) => {
-          if (!product.category) return;
+          if (
+            !product.category
+          ) return;
 
-          if (!map.has(product.category)) {
-            map.set(product.category, {
-              slug: product.category,
-              name: getCategoryName(
-                product.category,
-              ),
-              description: "",
-              image: "",
-              source: "static",
-            });
+          if (
+            !map.has(
+              product.category,
+            )
+          ) {
+            map.set(
+              product.category,
+              {
+                slug:
+                  product.category,
+                name:
+                  getCategoryName(
+                    product.category,
+                  ),
+                description:
+                  "",
+                image:
+                  "",
+                source:
+                  "static",
+              },
+            );
           }
         },
       );
@@ -452,18 +644,21 @@ function AdminProductsPage() {
      فتح لوحة التحكم
   ========================================================= */
 
-  const handleUnlock = async (
-    e: FormEvent,
-  ) => {
-    e.preventDefault();
+  const handleUnlock =
+    async (
+      e: FormEvent,
+    ) => {
+      e.preventDefault();
 
-    await Promise.all([
-      loadProducts(password),
-      loadCategories(password),
-    ]);
+      await Promise.all([
+        loadProducts(password),
+        loadCategories(
+          password,
+        ),
+      ]);
 
-    setUnlocked(true);
-  };
+      setUnlocked(true);
+    };
 
   /* =========================================================
      إعادة ضبط فورم المنتج
@@ -474,8 +669,8 @@ function AdminProductsPage() {
     setEditingLegacyId(null);
 
     setCategorySlug(
-      categoryOptions[0]?.slug ||
-        "rings",
+      categoryOptions[0]
+        ?.slug || "rings",
     );
 
     setName("");
@@ -499,12 +694,6 @@ function AdminProductsPage() {
 
   /* =========================================================
      تعديل منتج
-     
-     الآن المنتجات القديمة قابلة للتعديل.
-     
-     إذا كان المنتج من products.ts:
-     نخزن legacy_id ونقوم بإنشائه في Supabase
-     عند الضغط على حفظ.
   ========================================================= */
 
   const startEdit = (
@@ -526,21 +715,25 @@ function AdminProductsPage() {
       p.category,
     );
 
-    setName(
-      p.name,
-    );
+    setName(p.name);
 
     setPriceNew(
       p.price_new !== null &&
-        p.price_new !== undefined
-        ? String(p.price_new)
+        p.price_new !==
+          undefined
+        ? String(
+            p.price_new,
+          )
         : "",
     );
 
     setPriceOld(
       p.price_old !== null &&
-        p.price_old !== undefined
-        ? String(p.price_old)
+        p.price_old !==
+          undefined
+        ? String(
+            p.price_old,
+          )
         : "",
     );
 
@@ -579,365 +772,407 @@ function AdminProductsPage() {
   };
 
   /* =========================================================
-     الصورة الرئيسية
+     الصورة الرئيسية للمنتج
   ========================================================= */
 
-  const handleMainImageChange = (
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const file =
-      e.target.files?.[0];
+  const handleMainImageChange =
+    (
+      e: ChangeEvent<HTMLInputElement>,
+    ) => {
+      const file =
+        e.target.files?.[0];
 
-    if (!file) return;
+      if (!file) return;
 
-    setMainImageFile(file);
+      setMainImageFile(file);
 
-    setMainImagePreview(
-      URL.createObjectURL(file),
-    );
-  };
+      setMainImagePreview(
+        URL.createObjectURL(
+          file,
+        ),
+      );
+    };
 
   /* =========================================================
      صور المعرض
   ========================================================= */
 
-  const handleGalleryChange = (
-    e: ChangeEvent<HTMLInputElement>,
-  ) => {
-    const files = Array.from(
-      e.target.files || [],
-    );
+  const handleGalleryChange =
+    (
+      e: ChangeEvent<HTMLInputElement>,
+    ) => {
+      const files =
+        Array.from(
+          e.target.files || [],
+        );
 
-    setGalleryFiles(files);
+      setGalleryFiles(files);
 
-    setGalleryPreviews(
-      files.map((f) =>
-        URL.createObjectURL(f),
-      ),
-    );
-  };
+      setGalleryPreviews(
+        files.map((f) =>
+          URL.createObjectURL(
+            f,
+          ),
+        ),
+      );
+    };
 
   /* =========================================================
      خيارات الأحجام
   ========================================================= */
 
-  const addSizeOption = () => {
-    setSizeOptions([
-      ...sizeOptions,
-      {
-        label: "",
-        price: 0,
-      },
-    ]);
-  };
-
-  const updateSizeOption = (
-    i: number,
-    field:
-      | "label"
-      | "price",
-    value: string,
-  ) => {
-    const copy = [
-      ...sizeOptions,
-    ];
-
-    copy[i] = {
-      ...copy[i],
-      [field]:
-        field === "price"
-          ? Number(value) || 0
-          : value,
+  const addSizeOption =
+    () => {
+      setSizeOptions([
+        ...sizeOptions,
+        {
+          label: "",
+          price: 0,
+        },
+      ]);
     };
 
-    setSizeOptions(copy);
-  };
+  const updateSizeOption =
+    (
+      i: number,
+      field:
+        | "label"
+        | "price",
+      value: string,
+    ) => {
+      const copy = [
+        ...sizeOptions,
+      ];
 
-  const removeSizeOption = (
-    i: number,
-  ) => {
-    setSizeOptions(
-      sizeOptions.filter(
-        (_, idx) =>
-          idx !== i,
-      ),
-    );
-  };
+      copy[i] = {
+        ...copy[i],
+        [field]:
+          field ===
+          "price"
+            ? Number(
+                value,
+              ) || 0
+            : value,
+      };
+
+      setSizeOptions(copy);
+    };
+
+  const removeSizeOption =
+    (i: number) => {
+      setSizeOptions(
+        sizeOptions.filter(
+          (_, idx) =>
+            idx !== i,
+        ),
+      );
+    };
 
   /* =========================================================
      حفظ المنتج
-     
-     هناك الآن ثلاث حالات:
-     
-     1. editingId موجود
-        -> تعديل منتج موجود في Supabase.
-     
-     2. editingLegacyId موجود
-        -> نقل/حفظ المنتج القديم إلى Supabase
-           مع legacy_id.
-     
-     3. لا يوجد أي منهما
-        -> إضافة منتج جديد.
   ========================================================= */
 
-  const handleSave = async (
-    e: FormEvent,
-  ) => {
-    e.preventDefault();
+  const handleSave =
+    async (
+      e: FormEvent,
+    ) => {
+      e.preventDefault();
 
-    setSaving(true);
-    setFormMessage(null);
+      setSaving(true);
+      setFormMessage(null);
 
-    try {
-      let imageUrl =
-        existingImageUrl;
+      try {
+        let imageUrl =
+          existingImageUrl;
 
-      /*
-       * إذا اختار المستخدم صورة جديدة
-       * نرفعها أولاً.
-       */
-      if (mainImageFile) {
-        imageUrl =
-          await uploadImage(
-            mainImageFile,
-            password,
-          );
-      }
+        if (mainImageFile) {
+          imageUrl =
+            await uploadImage(
+              mainImageFile,
+              password,
+            );
+        }
 
-      if (!imageUrl) {
+        if (!imageUrl) {
+          setFormMessage({
+            ok: false,
+            text:
+              "الصورة الرئيسية مطلوبة.",
+          });
+
+          setSaving(false);
+          return;
+        }
+
+        let gallery =
+          existingGallery;
+
+        if (
+          galleryFiles.length >
+          0
+        ) {
+          gallery =
+            await Promise.all(
+              galleryFiles.map(
+                (f) =>
+                  uploadImage(
+                    f,
+                    password,
+                  ),
+              ),
+            );
+        }
+
+        const res =
+          await saveProduct({
+            data: {
+              password,
+
+              id:
+                editingId ||
+                undefined,
+
+              legacyId:
+                editingLegacyId ||
+                undefined,
+
+              categorySlug:
+                categorySlug,
+
+              name:
+                name.trim(),
+
+              imageUrl,
+
+              gallery,
+
+              priceNew:
+                Number(
+                  priceNew,
+                ) || 0,
+
+              priceOld:
+                Number(
+                  priceOld,
+                ) || 0,
+
+              priceNote:
+                priceNote.trim() ||
+                undefined,
+
+              sizeOptions:
+                sizeOptions.filter(
+                  (s) =>
+                    s.label.trim(),
+                ),
+
+              description:
+                description.trim(),
+            },
+          });
+
+        if (
+          editingLegacyId
+        ) {
+          setFormMessage({
+            ok: true,
+            text:
+              "تم نقل المنتج القديم إلى قاعدة البيانات وحفظ تعديلاته بنجاح ✅",
+          });
+        } else if (
+          editingId
+        ) {
+          setFormMessage({
+            ok: true,
+            text:
+              "تم تحديث المنتج بنجاح ✅",
+          });
+        } else {
+          setFormMessage({
+            ok: true,
+            text:
+              `تم إضافة المنتج بنجاح ✅ (المعرّف: ${res.id})`,
+          });
+        }
+
+        resetForm();
+
+        await loadProducts(
+          password,
+        );
+      } catch (err) {
         setFormMessage({
           ok: false,
           text:
-            "الصورة الرئيسية مطلوبة.",
+            err instanceof Error
+              ? err.message
+              : "حدث خطأ غير متوقع",
         });
-
+      } finally {
         setSaving(false);
-        return;
       }
-
-      /*
-       * الصور الإضافية
-       */
-      let gallery =
-        existingGallery;
-
-      if (
-        galleryFiles.length > 0
-      ) {
-        gallery =
-          await Promise.all(
-            galleryFiles.map(
-              (f) =>
-                uploadImage(
-                  f,
-                  password,
-                ),
-            ),
-          );
-      }
-
-      /*
-       * حفظ المنتج
-       */
-      const res =
-        await saveProduct({
-          data: {
-            password,
-
-            /*
-             * إذا كان منتجاً موجوداً في Supabase
-             * نرسل id.
-             *
-             * إذا كان منتجاً قديماً
-             * لا نرسل id، بل نرسل legacyId.
-             */
-            id:
-              editingId ||
-              undefined,
-
-            legacyId:
-              editingLegacyId ||
-              undefined,
-
-            categorySlug:
-              categorySlug,
-
-            name:
-              name.trim(),
-
-            imageUrl,
-
-            gallery,
-
-            priceNew:
-              Number(
-                priceNew,
-              ) || 0,
-
-            priceOld:
-              Number(
-                priceOld,
-              ) || 0,
-
-            priceNote:
-              priceNote.trim() ||
-              undefined,
-
-            sizeOptions:
-              sizeOptions.filter(
-                (s) =>
-                  s.label.trim(),
-              ),
-
-            description:
-              description.trim(),
-          },
-        });
-
-      /*
-       * رسالة مناسبة لكل حالة
-       */
-      if (editingLegacyId) {
-        setFormMessage({
-          ok: true,
-          text:
-            "تم نقل المنتج القديم إلى قاعدة البيانات وحفظ تعديلاته بنجاح ✅",
-        });
-      } else if (editingId) {
-        setFormMessage({
-          ok: true,
-          text:
-            "تم تحديث المنتج بنجاح ✅",
-        });
-      } else {
-        setFormMessage({
-          ok: true,
-          text:
-            `تم إضافة المنتج بنجاح ✅ (المعرّف: ${res.id})`,
-        });
-      }
-
-      /*
-       * إعادة ضبط الفورم
-       */
-      resetForm();
-
-      /*
-       * إعادة تحميل المنتجات
-       *
-       * هنا سيختفي المنتج القديم تلقائياً
-       * لأن allAdminProducts يتعرف على legacy_id.
-       */
-      await loadProducts(
-        password,
-      );
-    } catch (err) {
-      setFormMessage({
-        ok: false,
-        text:
-          err instanceof Error
-            ? err.message
-            : "حدث خطأ غير متوقع",
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
+    };
 
   /* =========================================================
      حذف منتج
   ========================================================= */
 
-  const handleDelete = async (
-    p: AdminProductRow,
-  ) => {
-    /*
-     * المنتج القديم الذي لم يتم نقله بعد
-     * لا يمكن حذفه من Supabase لأنه غير موجود هناك.
-     *
-     * أما بعد نقله سيظهر كمصدر Supabase
-     * ويمكن حذفه بشكل طبيعي.
-     */
-    if (
-      p.source === "legacy"
-    ) {
-      alert(
-        "هذا المنتج موجود حالياً داخل products.ts ولم يتم نقله إلى قاعدة البيانات بعد. يمكنك تعديله وحفظه أولاً، وعندها سيصبح قابلاً للحذف من لوحة التحكم.",
-      );
-      return;
-    }
+  const handleDelete =
+    async (
+      p: AdminProductRow,
+    ) => {
+      if (
+        p.source ===
+        "legacy"
+      ) {
+        alert(
+          "هذا المنتج موجود حالياً داخل products.ts ولم يتم نقله إلى قاعدة البيانات بعد. يمكنك تعديله وحفظه أولاً، وعندها سيصبح قابلاً للحذف من لوحة التحكم.",
+        );
 
-    if (
-      !confirm(
-        "متأكد من حذف هذا المنتج؟ لا يمكن التراجع.",
-      )
-    ) {
-      return;
-    }
+        return;
+      }
 
-    try {
-      await deleteProduct({
-        data: {
+      if (
+        !confirm(
+          "متأكد من حذف هذا المنتج؟ لا يمكن التراجع.",
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await deleteProduct({
+          data: {
+            password,
+            id: p.id,
+          },
+        });
+
+        await loadProducts(
           password,
-          id: p.id,
-        },
-      });
-
-      await loadProducts(
-        password,
-      );
-    } catch (err) {
-      alert(
-        err instanceof Error
-          ? err.message
-          : "حدث خطأ أثناء الحذف",
-      );
-    }
-  };
+        );
+      } catch (err) {
+        alert(
+          err instanceof Error
+            ? err.message
+            : "حدث خطأ أثناء الحذف",
+        );
+      }
+    };
 
   /* =========================================================
      فورم القسم
   ========================================================= */
 
-  const resetCategoryForm = () => {
-    setCategoryEditingId(null);
-    setCategorySlugInput("");
-    setCategoryNameInput("");
-    setCategoryDescriptionInput("");
-    setCategoryImageInput("");
-    setCategoryMessage(null);
-  };
+  const resetCategoryForm =
+    () => {
+      setCategoryEditingId(
+        null,
+      );
 
-  const startEditCategory = (
-    category: AdminCategory,
-  ) => {
-    setCategoryEditingId(
-      category.id,
-    );
+      setCategorySlugInput(
+        "",
+      );
 
-    setCategorySlugInput(
-      category.slug,
-    );
+      setCategoryNameInput(
+        "",
+      );
 
-    setCategoryNameInput(
-      category.name,
-    );
+      setCategoryDescriptionInput(
+        "",
+      );
 
-    setCategoryDescriptionInput(
-      category.description || "",
-    );
+      setCategoryExistingImage(
+        "",
+      );
 
-    setCategoryImageInput(
-      category.image || "",
-    );
+      setCategoryImageFile(
+        null,
+      );
 
-    setCategoryMessage(null);
+      setCategoryImagePreview(
+        "",
+      );
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+      setCategoryMessage(
+        null,
+      );
+    };
+
+  /* =========================================================
+     تعديل قسم
+  ========================================================= */
+
+  const startEditCategory =
+    (
+      category: AdminCategory,
+    ) => {
+      setCategoryEditingId(
+        category.id,
+      );
+
+      setCategorySlugInput(
+        category.slug,
+      );
+
+      setCategoryNameInput(
+        category.name,
+      );
+
+      setCategoryDescriptionInput(
+        category.description ||
+          "",
+      );
+
+      setCategoryExistingImage(
+        category.image || "",
+      );
+
+      setCategoryImageFile(
+        null,
+      );
+
+      setCategoryImagePreview(
+        category.image || "",
+      );
+
+      setCategoryMessage(
+        null,
+      );
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    };
+
+  /* =========================================================
+     اختيار صورة القسم
+  ========================================================= */
+
+  const handleCategoryImageChange =
+    (
+      e: ChangeEvent<HTMLInputElement>,
+    ) => {
+      const file =
+        e.target.files?.[0];
+
+      if (!file) return;
+
+      setCategoryImageFile(
+        file,
+      );
+
+      setCategoryImagePreview(
+        URL.createObjectURL(
+          file,
+        ),
+      );
+    };
+
+  /* =========================================================
+     حفظ القسم
+  ========================================================= */
 
   const handleSaveCategory =
     async (
@@ -953,6 +1188,7 @@ function AdminProductsPage() {
           text:
             "معرّف القسم مطلوب.",
         });
+
         return;
       }
 
@@ -964,6 +1200,7 @@ function AdminProductsPage() {
           text:
             "اسم القسم مطلوب.",
         });
+
         return;
       }
 
@@ -971,6 +1208,32 @@ function AdminProductsPage() {
       setCategoryMessage(null);
 
       try {
+        /*
+         * نبدأ بالصورة الموجودة.
+         */
+
+        let imageUrl =
+          categoryExistingImage;
+
+        /*
+         * إذا اختار المستخدم صورة جديدة
+         * نقوم برفعها.
+         */
+
+        if (
+          categoryImageFile
+        ) {
+          imageUrl =
+            await uploadCategoryImageFile(
+              categoryImageFile,
+              password,
+            );
+        }
+
+        /*
+         * حفظ القسم
+         */
+
         await saveCategory({
           data: {
             password,
@@ -991,7 +1254,7 @@ function AdminProductsPage() {
               categoryDescriptionInput.trim(),
 
             image:
-              categoryImageInput.trim(),
+              imageUrl || "",
           },
         });
 
@@ -999,8 +1262,8 @@ function AdminProductsPage() {
           ok: true,
           text:
             categoryEditingId
-              ? "تم تحديث القسم ✅"
-              : "تم إنشاء القسم الجديد ✅",
+              ? "تم تحديث القسم والصورة بنجاح ✅"
+              : "تم إنشاء القسم الجديد والصورة بنجاح ✅",
         });
 
         resetCategoryForm();
@@ -1076,7 +1339,9 @@ function AdminProductsPage() {
 
   useEffect(() => {
     return () => {
-      if (mainImagePreview) {
+      if (
+        mainImagePreview
+      ) {
         URL.revokeObjectURL(
           mainImagePreview,
         );
@@ -1084,9 +1349,20 @@ function AdminProductsPage() {
 
       galleryPreviews.forEach(
         (u) => {
-          URL.revokeObjectURL(u);
+          URL.revokeObjectURL(
+            u,
+          );
         },
       );
+
+      if (
+        categoryImagePreview &&
+        categoryImageFile
+      ) {
+        URL.revokeObjectURL(
+          categoryImagePreview,
+        );
+      }
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1360,27 +1636,70 @@ function AdminProductsPage() {
               />
             </div>
 
+            {/* =================================================
+                صورة القسم
+            ================================================= */}
+
             <div>
               <label className="mb-2 block text-sm font-bold">
-                رابط صورة القسم
-                <span className="ml-1 font-normal text-muted-foreground">
+                صورة القسم
+                <span className="mr-1 font-normal text-muted-foreground">
                   (اختياري)
                 </span>
               </label>
 
-              <input
-                type="text"
-                value={
-                  categoryImageInput
-                }
-                onChange={(e) =>
-                  setCategoryImageInput(
-                    e.target.value,
-                  )
-                }
-                placeholder="https://..."
-                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
-              />
+              {categoryImagePreview && (
+                <div className="mb-3 flex items-center gap-3">
+
+                  <img
+                    src={
+                      categoryImagePreview
+                    }
+                    alt=""
+                    className="h-24 w-24 rounded-xl border border-border object-cover"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategoryImageFile(
+                        null,
+                      );
+
+                      setCategoryImagePreview(
+                        categoryExistingImage ||
+                          "",
+                      );
+                    }}
+                    className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:border-destructive hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                    إلغاء الصورة الجديدة
+                  </button>
+
+                </div>
+              )}
+
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-3 text-sm font-bold hover:border-primary">
+                <Upload className="h-4 w-4" />
+
+                {categoryImagePreview
+                  ? "اختيار صورة أخرى"
+                  : "تحميل صورة القسم"}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={
+                    handleCategoryImageChange
+                  }
+                  className="hidden"
+                />
+              </label>
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                يمكنك اختيار الصورة مباشرة من الهاتف أو الكمبيوتر. سيتم رفعها تلقائياً عند حفظ القسم.
+              </p>
             </div>
 
             {categoryMessage && (
@@ -1411,7 +1730,7 @@ function AdminProductsPage() {
               )}
 
               {categorySaving
-                ? "جارٍ الحفظ..."
+                ? "جارٍ رفع الصورة وحفظ القسم..."
                 : categoryEditingId
                   ? "حفظ تعديلات القسم"
                   : "إضافة قسم جديد"}
@@ -1469,7 +1788,9 @@ function AdminProductsPage() {
                       </div>
 
                       <div className="mt-1 text-[11px] text-muted-foreground">
-                        {category.slug}
+                        {
+                          category.slug
+                        }
                       </div>
 
                       <div className="mt-1">
@@ -1624,10 +1945,8 @@ function AdminProductsPage() {
               الصورة الرئيسية
             </label>
 
-            {(
-              mainImagePreview ||
-              existingImageUrl
-            ) && (
+            {(mainImagePreview ||
+              existingImageUrl) && (
               <img
                 src={
                   mainImagePreview ||
@@ -1659,18 +1978,15 @@ function AdminProductsPage() {
               صور معاينة إضافية (اختياري)
             </label>
 
-            {(
-              galleryPreviews.length >
-                0 ||
+            {(galleryPreviews.length >
+              0 ||
               existingGallery.length >
-                0
-            ) && (
+                0) && (
               <div className="mb-2 flex flex-wrap gap-2">
-                {(
-                  galleryPreviews.length >
-                  0
-                    ? galleryPreviews
-                    : existingGallery
+                {(galleryPreviews.length >
+                0
+                  ? galleryPreviews
+                  : existingGallery
                 ).map(
                   (src, i) => (
                     <img
