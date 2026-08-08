@@ -6,19 +6,28 @@ import {
   Trash2,
   Pencil,
   Upload,
+  FolderPlus,
   X,
 } from "lucide-react";
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+
 import {
   saveProduct,
   deleteProduct,
   listAdminProducts,
   uploadProductImage,
 } from "@/lib/api/products-admin.functions";
+
+import {
+  listAdminCategories,
+  saveCategory,
+  deleteCategory,
+} from "@/lib/api/categories-admin.functions";
+
 import { allProducts } from "@/lib/products";
 import { categories as staticCategories } from "@/lib/categories";
-import { categories } from "@/lib/categories";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
@@ -27,6 +36,18 @@ export const Route = createFileRoute("/admin/products")({
   component: AdminProductsPage,
 });
 
+const CATEGORY_NAMES: Record<string, string> = {
+  rings: "ستاندات محابس",
+  dowry: "صناديق مهر و هدايا",
+  flowers: "باقات ورد صناعي",
+  birthday: "أعياد الميلاد",
+  graduation: "التخرج",
+  mother: "عيد الأم",
+  newborn: "مواليد",
+  ramadan: "رمضان",
+  teacher: "هدايا المعلمين",
+};
+
 type SizeOption = {
   label: string;
   price: number;
@@ -34,7 +55,6 @@ type SizeOption = {
 
 type AdminProductRow = {
   id: string;
-  legacy_id?: string | null;
   category: string;
   name: string;
   image: string;
@@ -46,6 +66,19 @@ type AdminProductRow = {
   description: string | null;
   source: "supabase" | "legacy";
 };
+
+type AdminCategory = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  created_at?: string;
+};
+
+function getCategoryName(slug: string): string {
+  return CATEGORY_NAMES[slug] || slug;
+}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -87,28 +120,79 @@ async function uploadImage(
 }
 
 function AdminProductsPage() {
+  /* =========================================================
+     كلمة السر
+  ========================================================= */
+
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
+
+  /* =========================================================
+     المنتجات
+  ========================================================= */
 
   const [supabaseProducts, setSupabaseProducts] =
     useState<AdminProductRow[]>([]);
 
-  const [loadingList, setLoadingList] = useState(false);
-  const [listError, setListError] = useState("");
+  const [loadingList, setLoadingList] =
+    useState(false);
 
-  const [editingId, setEditingId] =
+  const [listError, setListError] =
+    useState("");
+
+  /* =========================================================
+     الأقسام
+  ========================================================= */
+
+  const [adminCategories, setAdminCategories] =
+    useState<AdminCategory[]>([]);
+
+  const [categoryEditingId, setCategoryEditingId] =
     useState<string | null>(null);
 
-  const [editingLegacyId, setEditingLegacyId] =
+  const [categorySlugInput, setCategorySlugInput] =
+    useState("");
+
+  const [categoryNameInput, setCategoryNameInput] =
+    useState("");
+
+  const [categoryDescriptionInput, setCategoryDescriptionInput] =
+    useState("");
+
+  const [categoryImageInput, setCategoryImageInput] =
+    useState("");
+
+  const [categorySaving, setCategorySaving] =
+    useState(false);
+
+  const [categoryMessage, setCategoryMessage] =
+    useState<{
+      ok: boolean;
+      text: string;
+    } | null>(null);
+
+  /* =========================================================
+     فورم المنتج
+  ========================================================= */
+
+  const [editingId, setEditingId] =
     useState<string | null>(null);
 
   const [categorySlug, setCategorySlug] =
     useState("rings");
 
-  const [name, setName] = useState("");
-  const [priceNew, setPriceNew] = useState("");
-  const [priceOld, setPriceOld] = useState("");
-  const [priceNote, setPriceNote] = useState("");
+  const [name, setName] =
+    useState("");
+
+  const [priceNew, setPriceNew] =
+    useState("");
+
+  const [priceOld, setPriceOld] =
+    useState("");
+
+  const [priceNote, setPriceNote] =
+    useState("");
+
   const [description, setDescription] =
     useState("");
 
@@ -133,12 +217,18 @@ function AdminProductsPage() {
   const [existingGallery, setExistingGallery] =
     useState<string[]>([]);
 
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] =
+    useState(false);
 
-  const [formMessage, setFormMessage] = useState<{
-    ok: boolean;
-    text: string;
-  } | null>(null);
+  const [formMessage, setFormMessage] =
+    useState<{
+      ok: boolean;
+      text: string;
+    } | null>(null);
+
+  /* =========================================================
+     تحميل المنتجات
+  ========================================================= */
 
   const loadProducts = async (pwd: string) => {
     setLoadingList(true);
@@ -160,123 +250,202 @@ function AdminProductsPage() {
           ? err.message
           : "حدث خطأ أثناء تحميل المنتجات",
       );
+    } finally {
+      setLoadingList(false);
     }
-
-    setLoadingList(false);
   };
 
-  /*
-   * تحويل المنتجات القديمة إلى صفوف قابلة
-   * للعرض في لوحة التحكم.
-   */
-  const legacyProducts: AdminProductRow[] =
-    allProducts.map((p) => ({
-      id: "",
-      legacy_id: p.id,
-      category: p.categorySlug,
-      name: p.name,
-      image: p.image,
-      gallery: p.gallery || null,
-      price_new: p.priceNew ?? 0,
-      price_old: p.priceOld ?? 0,
-      price_note: p.priceNote || null,
-      size_options: p.sizeOptions || null,
-      description: p.description || null,
-      source: "legacy",
-    }));
+  /* =========================================================
+     تحميل الأقسام
+  ========================================================= */
 
-  /*
-   * المنتجات التي أصبحت موجودة في Supabase.
-   *
-   * إذا كان المنتج يحمل legacy_id فهو نسخة
-   * إدارية من منتج قديم، لذلك لا نعرضه مرتين.
-   */
-  const allAdminProducts = useMemo<
-    AdminProductRow[]
-  >(() => {
-    const legacyIds = new Set(
-      supabaseProducts
-        .map((p) => p.legacy_id)
-        .filter(Boolean),
-    );
+  const loadCategories = async (pwd: string) => {
+    try {
+      const rows = await listAdminCategories({
+        data: {
+          password: pwd,
+        },
+      });
 
-    const oldProducts = legacyProducts.filter(
-      (p) => !legacyIds.has(p.legacy_id),
-    );
+      setAdminCategories(
+        rows as AdminCategory[],
+      );
+    } catch (err) {
+      console.error(
+        "تعذر تحميل الأقسام:",
+        err,
+      );
+    }
+  };
 
-    const newProducts =
-      supabaseProducts.map((p) => ({
-        ...p,
-        source: "supabase" as const,
-      }));
+  /* =========================================================
+     دمج المنتجات القديمة والجديدة
+  ========================================================= */
 
-    return [...oldProducts, ...newProducts];
-  }, [supabaseProducts]);
+  const allAdminProducts =
+    useMemo<AdminProductRow[]>(() => {
+      const legacyProducts: AdminProductRow[] =
+        allProducts.map((p) => ({
+          id: `legacy-${p.id}`,
+          category: p.categorySlug,
+          name: p.name,
+          image: p.image,
+          gallery: p.gallery || null,
+          price_new: p.priceNew ?? 0,
+          price_old: p.priceOld ?? 0,
+          price_note: p.priceNote || null,
+          size_options:
+            p.sizeOptions || null,
+          description:
+            p.description || null,
+          source: "legacy",
+        }));
 
-  /*
-   * جميع الأقسام الموجودة في categories.ts
-   * وليس فقط الأقسام التي لديها منتجات.
-   */
-  const categoryOptions = useMemo(() => {
-    return categories.map((category) => ({
-      slug: category.slug,
-      name: category.name,
-    }));
-  }, []);
+      const newProducts: AdminProductRow[] =
+        supabaseProducts.map((p) => ({
+          ...p,
+          source: "supabase",
+        }));
+
+      return [
+        ...legacyProducts,
+        ...newProducts,
+      ];
+    }, [supabaseProducts]);
+
+  /* =========================================================
+     الأقسام
+
+     نجمع:
+     1. الأقسام الموجودة في Supabase
+     2. الأقسام الموجودة في categories.ts
+     3. الأقسام الموجودة فعلياً في المنتجات
+  ========================================================= */
+
+  const categoryOptions =
+    useMemo(() => {
+      const map = new Map<
+        string,
+        {
+          slug: string;
+          name: string;
+          description: string;
+          image: string;
+          source: "database" | "static";
+          id?: string;
+        }
+      >();
+
+      /* الأقسام الموجودة في قاعدة البيانات */
+
+      adminCategories.forEach((category) => {
+        map.set(category.slug, {
+          slug: category.slug,
+          name: category.name,
+          description:
+            category.description || "",
+          image: category.image || "",
+          source: "database",
+          id: category.id,
+        });
+      });
+
+      /* الأقسام الثابتة في categories.ts */
+
+      staticCategories.forEach((category) => {
+        if (!map.has(category.slug)) {
+          map.set(category.slug, {
+            slug: category.slug,
+            name: category.name,
+            description:
+              category.description || "",
+            image: category.image || "",
+            source: "static",
+          });
+        }
+      });
+
+      /* أي قسم موجود في المنتجات */
+
+      allAdminProducts.forEach((product) => {
+        if (!product.category) return;
+
+        if (!map.has(product.category)) {
+          map.set(product.category, {
+            slug: product.category,
+            name: getCategoryName(
+              product.category,
+            ),
+            description: "",
+            image: "",
+            source: "static",
+          });
+        }
+      });
+
+      return Array.from(map.values());
+    }, [
+      adminCategories,
+      allAdminProducts,
+    ]);
+
+  /* =========================================================
+     فتح لوحة التحكم
+  ========================================================= */
 
   const handleUnlock = async (
     e: React.FormEvent,
   ) => {
     e.preventDefault();
 
-    if (!password.trim()) {
-      setListError("أدخل كلمة السر الإدارية.");
-      return;
-    }
+    await Promise.all([
+      loadProducts(password),
+      loadCategories(password),
+    ]);
 
-    await loadProducts(password);
     setUnlocked(true);
   };
 
+  /* =========================================================
+     إعادة ضبط فورم المنتج
+  ========================================================= */
+
   const resetForm = () => {
     setEditingId(null);
-    setEditingLegacyId(null);
-
-    setCategorySlug("rings");
+    setCategorySlug(
+      categoryOptions[0]?.slug ||
+        "rings",
+    );
     setName("");
     setPriceNew("");
     setPriceOld("");
     setPriceNote("");
     setDescription("");
     setSizeOptions([]);
-
     setMainImageFile(null);
     setMainImagePreview("");
-
     setGalleryFiles([]);
     setGalleryPreviews([]);
-
     setExistingImageUrl("");
     setExistingGallery([]);
-
     setFormMessage(null);
   };
+
+  /* =========================================================
+     تعديل منتج
+  ========================================================= */
 
   const startEdit = (
     p: AdminProductRow,
   ) => {
-    setEditingId(
-      p.source === "supabase"
-        ? p.id
-        : null,
-    );
+    if (p.source === "legacy") {
+      alert(
+        "هذا المنتج من المنتجات القديمة الموجودة داخل products.ts. سيتم نقل هذه المنتجات إلى قاعدة البيانات في الخطوة التالية، وبعدها ستصبح قابلة للتعديل والحذف بالكامل من لوحة التحكم.",
+      );
+      return;
+    }
 
-    setEditingLegacyId(
-      p.source === "legacy"
-        ? p.legacy_id || null
-        : p.legacy_id || null,
-    );
-
+    setEditingId(p.id);
     setCategorySlug(p.category);
     setName(p.name);
 
@@ -294,20 +463,30 @@ function AdminProductsPage() {
         : "",
     );
 
-    setPriceNote(p.price_note || "");
-    setDescription(p.description || "");
+    setPriceNote(
+      p.price_note || "",
+    );
 
-    setSizeOptions(p.size_options || []);
+    setDescription(
+      p.description || "",
+    );
 
-    setExistingImageUrl(p.image);
-    setExistingGallery(p.gallery || []);
+    setSizeOptions(
+      p.size_options || [],
+    );
+
+    setExistingImageUrl(
+      p.image,
+    );
+
+    setExistingGallery(
+      p.gallery || [],
+    );
 
     setMainImageFile(null);
     setMainImagePreview("");
-
     setGalleryFiles([]);
     setGalleryPreviews([]);
-
     setFormMessage(null);
 
     window.scrollTo({
@@ -316,10 +495,15 @@ function AdminProductsPage() {
     });
   };
 
+  /* =========================================================
+     الصورة الرئيسية
+  ========================================================= */
+
   const handleMainImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = e.target.files?.[0];
+    const file =
+      e.target.files?.[0];
 
     if (!file) return;
 
@@ -329,6 +513,10 @@ function AdminProductsPage() {
       URL.createObjectURL(file),
     );
   };
+
+  /* =========================================================
+     صور المعرض
+  ========================================================= */
 
   const handleGalleryChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -346,6 +534,10 @@ function AdminProductsPage() {
     );
   };
 
+  /* =========================================================
+     خيارات الأحجام
+  ========================================================= */
+
   const addSizeOption = () => {
     setSizeOptions([
       ...sizeOptions,
@@ -361,7 +553,9 @@ function AdminProductsPage() {
     field: "label" | "price",
     value: string,
   ) => {
-    const copy = [...sizeOptions];
+    const copy = [
+      ...sizeOptions,
+    ];
 
     copy[i] = {
       ...copy[i],
@@ -384,105 +578,103 @@ function AdminProductsPage() {
     );
   };
 
+  /* =========================================================
+     حفظ المنتج
+  ========================================================= */
+
   const handleSave = async (
     e: React.FormEvent,
   ) => {
     e.preventDefault();
 
-    if (!name.trim()) {
-      setFormMessage({
-        ok: false,
-        text: "يرجى إدخال اسم المنتج.",
-      });
-      return;
-    }
-
     setSaving(true);
     setFormMessage(null);
 
     try {
-      let imageUrl = existingImageUrl;
+      let imageUrl =
+        existingImageUrl;
 
       if (mainImageFile) {
-        imageUrl = await uploadImage(
-          mainImageFile,
-          password,
-        );
+        imageUrl =
+          await uploadImage(
+            mainImageFile,
+            password,
+          );
       }
 
       if (!imageUrl) {
-        setSaving(false);
-
         setFormMessage({
           ok: false,
-          text: "الصورة الرئيسية مطلوبة.",
+          text:
+            "الصورة الرئيسية مطلوبة.",
         });
 
+        setSaving(false);
         return;
       }
 
-      let gallery = existingGallery;
+      let gallery =
+        existingGallery;
 
-      if (galleryFiles.length > 0) {
-        gallery = await Promise.all(
-          galleryFiles.map((file) =>
-            uploadImage(file, password),
-          ),
-        );
+      if (
+        galleryFiles.length > 0
+      ) {
+        gallery =
+          await Promise.all(
+            galleryFiles.map(
+              (f) =>
+                uploadImage(
+                  f,
+                  password,
+                ),
+            ),
+          );
       }
 
-      const res = await saveProduct({
-        data: {
-          password,
-
-          id:
-            editingId ||
-            undefined,
-
-          legacyId:
-            editingLegacyId ||
-            undefined,
-
-          categorySlug,
-
-          name: name.trim(),
-
-          imageUrl,
-
-          gallery,
-
-          priceNew:
-            Number(priceNew) || 0,
-
-          priceOld:
-            Number(priceOld) || 0,
-
-          priceNote:
-            priceNote.trim() ||
-            undefined,
-
-          sizeOptions:
-            sizeOptions.filter(
-              (s) =>
-                s.label.trim() !== "",
-            ),
-
-          description:
-            description.trim(),
-        },
-      });
+      const res =
+        await saveProduct({
+          data: {
+            password,
+            id:
+              editingId ||
+              undefined,
+            categorySlug,
+            name: name.trim(),
+            imageUrl,
+            gallery,
+            priceNew:
+              Number(
+                priceNew,
+              ) || 0,
+            priceOld:
+              Number(
+                priceOld,
+              ) || 0,
+            priceNote:
+              priceNote.trim() ||
+              undefined,
+            sizeOptions:
+              sizeOptions.filter(
+                (s) =>
+                  s.label.trim(),
+              ),
+            description:
+              description.trim(),
+          },
+        });
 
       setFormMessage({
         ok: true,
-        text: editingId ||
-          editingLegacyId
-          ? "تم تحديث المنتج بنجاح ✅"
-          : `تم إضافة المنتج بنجاح ✅`,
+        text: editingId
+          ? "تم تحديث المنتج ✅"
+          : `تم إضافة المنتج ✅ (المعرّف: ${res.id})`,
       });
 
       resetForm();
 
-      await loadProducts(password);
+      await loadProducts(
+        password,
+      );
     } catch (err) {
       setFormMessage({
         ok: false,
@@ -491,40 +683,44 @@ function AdminProductsPage() {
             ? err.message
             : "حدث خطأ غير متوقع",
       });
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
+
+  /* =========================================================
+     حذف منتج
+  ========================================================= */
 
   const handleDelete = async (
     p: AdminProductRow,
   ) => {
-    const isLegacy =
-      p.source === "legacy";
+    if (p.source === "legacy") {
+      alert(
+        "هذا المنتج من المنتجات القديمة الموجودة داخل products.ts. سيتم نقل هذه المنتجات إلى قاعدة البيانات في الخطوة التالية، وبعدها ستصبح قابلة للحذف بالكامل من لوحة التحكم.",
+      );
+      return;
+    }
 
-    const message = isLegacy
-      ? `سيتم حذف نسخة المنتج "${p.name}" من لوحة الإدارة/قاعدة البيانات إن كانت موجودة. المنتج الأصلي في الموقع لن يتم حذفه. هل تريد المتابعة؟`
-      : `هل أنت متأكد من حذف المنتج "${p.name}"؟ لا يمكن التراجع عن هذا الإجراء.`;
-
-    if (!confirm(message)) {
+    if (
+      !confirm(
+        "متأكد من حذف هذا المنتج؟ لا يمكن التراجع.",
+      )
+    ) {
       return;
     }
 
     try {
       await deleteProduct({
-        data: isLegacy
-          ? {
-              password,
-              legacyId:
-                p.legacy_id || undefined,
-            }
-          : {
-              password,
-              id: p.id,
-            },
+        data: {
+          password,
+          id: p.id,
+        },
       });
 
-      await loadProducts(password);
+      await loadProducts(
+        password,
+      );
     } catch (err) {
       alert(
         err instanceof Error
@@ -534,6 +730,180 @@ function AdminProductsPage() {
     }
   };
 
+  /* =========================================================
+     فورم القسم
+  ========================================================= */
+
+  const resetCategoryForm = () => {
+    setCategoryEditingId(null);
+    setCategorySlugInput("");
+    setCategoryNameInput("");
+    setCategoryDescriptionInput("");
+    setCategoryImageInput("");
+    setCategoryMessage(null);
+  };
+
+  const startEditCategory = (
+    category: AdminCategory,
+  ) => {
+    setCategoryEditingId(
+      category.id,
+    );
+
+    setCategorySlugInput(
+      category.slug,
+    );
+
+    setCategoryNameInput(
+      category.name,
+    );
+
+    setCategoryDescriptionInput(
+      category.description || "",
+    );
+
+    setCategoryImageInput(
+      category.image || "",
+    );
+
+    setCategoryMessage(null);
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleSaveCategory =
+    async (
+      e: React.FormEvent,
+    ) => {
+      e.preventDefault();
+
+      if (
+        !categorySlugInput.trim()
+      ) {
+        setCategoryMessage({
+          ok: false,
+          text:
+            "معرّف القسم مطلوب.",
+        });
+        return;
+      }
+
+      if (
+        !categoryNameInput.trim()
+      ) {
+        setCategoryMessage({
+          ok: false,
+          text:
+            "اسم القسم مطلوب.",
+        });
+        return;
+      }
+
+      setCategorySaving(true);
+      setCategoryMessage(null);
+
+      try {
+        await saveCategory({
+          data: {
+            password,
+            id:
+              categoryEditingId ||
+              undefined,
+            slug:
+              categorySlugInput
+                .trim()
+                .toLowerCase(),
+            name:
+              categoryNameInput.trim(),
+            description:
+              categoryDescriptionInput.trim(),
+            image:
+              categoryImageInput.trim(),
+          },
+        });
+
+        setCategoryMessage({
+          ok: true,
+          text:
+            categoryEditingId
+              ? "تم تحديث القسم ✅"
+              : "تم إنشاء القسم الجديد ✅",
+        });
+
+        resetCategoryForm();
+
+        await loadCategories(
+          password,
+        );
+
+        await loadProducts(
+          password,
+        );
+      } catch (err) {
+        setCategoryMessage({
+          ok: false,
+          text:
+            err instanceof Error
+              ? err.message
+              : "حدث خطأ أثناء حفظ القسم.",
+        });
+      } finally {
+        setCategorySaving(false);
+      }
+    };
+
+  /* =========================================================
+     حذف قسم
+  ========================================================= */
+
+  const handleDeleteCategory =
+    async (
+      category: AdminCategory,
+    ) => {
+      if (
+        !confirm(
+          `هل أنت متأكد من حذف قسم "${category.name}"؟`,
+        )
+      ) {
+        return;
+      }
+
+      try {
+        await deleteCategory({
+          data: {
+            password,
+            id: category.id,
+            slug: category.slug,
+          },
+        });
+
+        await loadCategories(
+          password,
+        );
+
+        setCategoryMessage({
+          ok: true,
+          text:
+            "تم حذف القسم ✅",
+        });
+      } catch (err) {
+        setCategoryMessage({
+          ok: false,
+          text:
+            err instanceof Error
+              ? err.message
+              : "حدث خطأ أثناء حذف القسم.",
+        });
+      }
+    };
+
+  /* =========================================================
+     تنظيف روابط الصور المؤقتة
+  ========================================================= */
+
   useEffect(() => {
     return () => {
       if (mainImagePreview) {
@@ -542,17 +912,20 @@ function AdminProductsPage() {
         );
       }
 
-      galleryPreviews.forEach((url) => {
-        URL.revokeObjectURL(url);
-      });
+      galleryPreviews.forEach(
+        (u) => {
+          URL.revokeObjectURL(u);
+        },
+      );
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /*
-   * شاشة تسجيل الدخول
-   */
+  /* =========================================================
+     شاشة تسجيل الدخول
+  ========================================================= */
+
   if (!unlocked) {
     return (
       <div className="min-h-screen">
@@ -572,14 +945,18 @@ function AdminProductsPage() {
           </div>
 
           <form
-            onSubmit={handleUnlock}
+            onSubmit={
+              handleUnlock
+            }
             className="space-y-4 rounded-xl border border-border bg-card p-5"
           >
             <input
               type="password"
               value={password}
               onChange={(e) =>
-                setPassword(e.target.value)
+                setPassword(
+                  e.target.value,
+                )
               }
               placeholder="كلمة السر الإدارية"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
@@ -593,7 +970,9 @@ function AdminProductsPage() {
 
             <button
               type="submit"
-              disabled={loadingList}
+              disabled={
+                loadingList
+              }
               className="w-full rounded-lg bg-primary px-6 py-3 text-base font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
               {loadingList
@@ -608,13 +987,20 @@ function AdminProductsPage() {
     );
   }
 
+  /* =========================================================
+     لوحة التحكم
+  ========================================================= */
+
   return (
     <div className="min-h-screen">
       <Header />
 
       <main className="mx-auto max-w-5xl px-4 py-10">
 
-        {/* العنوان والإحصائيات */}
+        {/* =====================================================
+            العنوان والإحصائيات
+        ===================================================== */}
+
         <div className="mb-6">
           <div className="flex items-center gap-2">
             <Package className="h-7 w-7 text-primary" />
@@ -628,7 +1014,9 @@ function AdminProductsPage() {
 
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-2xl font-extrabold">
-                {allAdminProducts.length}
+                {
+                  allAdminProducts.length
+                }
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
@@ -648,17 +1036,21 @@ function AdminProductsPage() {
 
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-2xl font-extrabold">
-                {supabaseProducts.length}
+                {
+                  supabaseProducts.length
+                }
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
-                في قاعدة البيانات
+                المنتجات الجديدة
               </div>
             </div>
 
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-2xl font-extrabold">
-                {categoryOptions.length}
+                {
+                  categoryOptions.length
+                }
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
@@ -669,38 +1061,335 @@ function AdminProductsPage() {
           </div>
         </div>
 
-        {/* نموذج المنتج */}
-        <form
-          onSubmit={handleSave}
-          className="space-y-5 rounded-xl border border-border bg-card p-5"
-        >
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">
-              {editingId || editingLegacyId
-                ? "تعديل المنتج"
-                : "إضافة منتج جديد"}
-            </h2>
+        {/* =====================================================
+            إدارة الأقسام
+        ===================================================== */}
 
-            {(editingId ||
-              editingLegacyId) && (
+        <section className="mb-8 rounded-xl border border-border bg-card p-5">
+
+          <div className="mb-5 flex items-center justify-between gap-3">
+
+            <div>
+              <div className="flex items-center gap-2">
+                <FolderPlus className="h-5 w-5 text-primary" />
+
+                <h2 className="text-lg font-bold">
+                  إدارة الأقسام
+                </h2>
+              </div>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                يمكنك إنشاء أقسام جديدة وتعديل الأقسام الموجودة في قاعدة البيانات.
+              </p>
+            </div>
+
+            {categoryEditingId && (
               <button
                 type="button"
-                onClick={resetForm}
-                className="text-muted-foreground hover:text-destructive"
+                onClick={
+                  resetCategoryForm
+                }
+                className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:border-primary"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
+                إلغاء
               </button>
             )}
+
           </div>
 
-          {/* القسم */}
+          <form
+            onSubmit={
+              handleSaveCategory
+            }
+            className="space-y-4"
+          >
+
+            <div className="grid gap-4 md:grid-cols-2">
+
+              <div>
+                <label className="mb-2 block text-sm font-bold">
+                  اسم القسم
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    categoryNameInput
+                  }
+                  onChange={(e) =>
+                    setCategoryNameInput(
+                      e.target.value,
+                    )
+                  }
+                  placeholder="مثال: هدايا الزواج"
+                  className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-bold">
+                  المعرّف التقني للقسم
+                </label>
+
+                <input
+                  type="text"
+                  value={
+                    categorySlugInput
+                  }
+                  onChange={(e) =>
+                    setCategorySlugInput(
+                      e.target.value
+                        .toLowerCase()
+                        .replace(
+                          /\s+/g,
+                          "-",
+                        ),
+                    )
+                  }
+                  placeholder="مثال: wedding"
+                  disabled={
+                    !!categoryEditingId
+                  }
+                  className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary disabled:opacity-60"
+                />
+
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  استخدم أحرف إنجليزية وأرقام وشرطة فقط.
+                </p>
+              </div>
+
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                وصف القسم
+              </label>
+
+              <textarea
+                value={
+                  categoryDescriptionInput
+                }
+                onChange={(e) =>
+                  setCategoryDescriptionInput(
+                    e.target.value,
+                  )
+                }
+                rows={3}
+                placeholder="وصف مختصر للقسم..."
+                className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-bold">
+                رابط صورة القسم
+                <span className="ml-1 font-normal text-muted-foreground">
+                  (اختياري)
+                </span>
+              </label>
+
+              <input
+                type="text"
+                value={
+                  categoryImageInput
+                }
+                onChange={(e) =>
+                  setCategoryImageInput(
+                    e.target.value,
+                  )
+                }
+                placeholder="https://..."
+                className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+              />
+            </div>
+
+            {categoryMessage && (
+              <div
+                className={`rounded-lg border px-3 py-2 text-sm ${
+                  categoryMessage.ok
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-destructive/40 bg-destructive/10 text-destructive"
+                }`}
+              >
+                {
+                  categoryMessage.text
+                }
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={
+                categorySaving
+              }
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60"
+            >
+              {categoryEditingId ? (
+                <Pencil className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
+
+              {categorySaving
+                ? "جارٍ الحفظ..."
+                : categoryEditingId
+                  ? "حفظ تعديلات القسم"
+                  : "إضافة قسم جديد"}
+            </button>
+
+          </form>
+
+          {/* قائمة الأقسام */}
+
+          <div className="mt-8">
+
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-sm font-extrabold">
+                الأقسام الحالية
+              </h3>
+
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                {
+                  categoryOptions.length
+                }
+              </span>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+
+              {categoryOptions.map(
+                (category) => (
+                  <div
+                    key={
+                      category.slug
+                    }
+                    className="flex items-center gap-3 rounded-xl border border-border bg-background p-3"
+                  >
+
+                    {category.image ? (
+                      <img
+                        src={
+                          category.image
+                        }
+                        alt=""
+                        className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <FolderPlus className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+
+                    <div className="min-w-0 flex-1">
+
+                      <div className="truncate text-sm font-bold">
+                        {
+                          category.name
+                        }
+                      </div>
+
+                      <div className="mt-1 text-[11px] text-muted-foreground">
+                        {category.slug}
+                      </div>
+
+                      <div className="mt-1">
+                        {category.source ===
+                        "database" ? (
+                          <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                            من قاعدة البيانات
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                            قسم أساسي
+                          </span>
+                        )}
+                      </div>
+
+                    </div>
+
+                    {category.source ===
+                      "database" &&
+                      category.id && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              startEditCategory(
+                                {
+                                  id: category.id!,
+                                  slug: category.slug,
+                                  name: category.name,
+                                  description:
+                                    category.description,
+                                  image:
+                                    category.image,
+                                },
+                              )
+                            }
+                            aria-label="تعديل القسم"
+                            className="text-muted-foreground hover:text-primary"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDeleteCategory(
+                                {
+                                  id: category.id!,
+                                  slug: category.slug,
+                                  name: category.name,
+                                  description:
+                                    category.description,
+                                  image:
+                                    category.image,
+                                },
+                              )
+                            }
+                            aria-label="حذف القسم"
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+
+                  </div>
+                ),
+              )}
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* =====================================================
+            فورم إضافة / تعديل المنتج
+        ===================================================== */}
+
+        <form
+          onSubmit={handleSave}
+          className="space-y-4 rounded-xl border border-border bg-card p-5"
+        >
+
+          <h2 className="text-lg font-bold">
+            {editingId
+              ? "تعديل منتج"
+              : "إضافة منتج جديد"}
+          </h2>
+
           <div>
             <label className="mb-2 block text-sm font-bold">
               القسم
             </label>
 
             <select
-              value={categorySlug}
+              value={
+                categorySlug
+              }
               onChange={(e) =>
                 setCategorySlug(
                   e.target.value,
@@ -709,19 +1398,18 @@ function AdminProductsPage() {
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             >
               {categoryOptions.map(
-                (category) => (
+                (c) => (
                   <option
-                    key={category.slug}
-                    value={category.slug}
+                    key={c.slug}
+                    value={c.slug}
                   >
-                    {category.name}
+                    {c.name}
                   </option>
                 ),
               )}
             </select>
           </div>
 
-          {/* الاسم */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               اسم المنتج
@@ -731,33 +1419,37 @@ function AdminProductsPage() {
               type="text"
               value={name}
               onChange={(e) =>
-                setName(e.target.value)
+                setName(
+                  e.target.value,
+                )
               }
               placeholder="مثال: ستاند محابس - تصميم جديد"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
           </div>
 
-          {/* الصورة الرئيسية */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               الصورة الرئيسية
             </label>
 
-            {(mainImagePreview ||
-              existingImageUrl) && (
+            {(
+              mainImagePreview ||
+              existingImageUrl
+            ) && (
               <img
                 src={
                   mainImagePreview ||
                   existingImageUrl
                 }
                 alt=""
-                className="mb-3 h-32 w-32 rounded-lg border border-border object-cover"
+                className="mb-2 h-32 w-32 rounded-lg border border-border object-cover"
               />
             )}
 
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary">
               <Upload className="h-4 w-4" />
+
               اختر صورة
 
               <input
@@ -771,34 +1463,39 @@ function AdminProductsPage() {
             </label>
           </div>
 
-          {/* المعرض */}
           <div>
             <label className="mb-2 block text-sm font-bold">
-              صور إضافية
+              صور معاينة إضافية (اختياري)
             </label>
 
-            {(galleryPreviews.length >
-              0 ||
+            {(
+              galleryPreviews.length >
+                0 ||
               existingGallery.length >
-                0) && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {(galleryPreviews.length >
                 0
-                  ? galleryPreviews
-                  : existingGallery
-                ).map((src, index) => (
-                  <img
-                    key={index}
-                    src={src}
-                    alt=""
-                    className="h-16 w-16 rounded-lg border border-border object-cover"
-                  />
-                ))}
+            ) && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {(
+                  galleryPreviews.length >
+                  0
+                    ? galleryPreviews
+                    : existingGallery
+                ).map(
+                  (src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      className="h-16 w-16 rounded-lg border border-border object-cover"
+                    />
+                  ),
+                )}
               </div>
             )}
 
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary">
               <Upload className="h-4 w-4" />
+
               اختر عدة صور
 
               <input
@@ -813,16 +1510,15 @@ function AdminProductsPage() {
             </label>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              عند اختيار صور جديدة سيتم استبدال صور المعرض القديمة.
+              اختيار صور جديدة سيستبدل القديمة بالكامل.
             </p>
           </div>
 
-          {/* الأسعار */}
           <div className="grid gap-4 md:grid-cols-2">
 
             <div>
               <label className="mb-2 block text-sm font-bold">
-                السعر — ليرة جديدة
+                السعر (ليرة جديدة)
               </label>
 
               <input
@@ -840,7 +1536,7 @@ function AdminProductsPage() {
 
             <div>
               <label className="mb-2 block text-sm font-bold">
-                السعر — ليرة قديمة
+                السعر (ليرة قديمة)
               </label>
 
               <input
@@ -858,10 +1554,9 @@ function AdminProductsPage() {
 
           </div>
 
-          {/* ملاحظة السعر */}
           <div>
             <label className="mb-2 block text-sm font-bold">
-              ملاحظة السعر{" "}
+              ملاحظة سعر بديلة{" "}
               <span className="font-normal text-muted-foreground">
                 (اختياري)
               </span>
@@ -875,16 +1570,20 @@ function AdminProductsPage() {
                   e.target.value,
                 )
               }
-              placeholder="مثال: من 2,000 إلى 3,500 ل.س حسب الحجم"
+              placeholder="مثال: من 2,000 إلى 3,500 ل.س جديدة حسب الحجم"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
           </div>
 
-          {/* الأحجام */}
           <div>
+
             <div className="mb-2 flex items-center justify-between">
+
               <label className="text-sm font-bold">
-                خيارات الأحجام والأسعار
+                خيارات أحجام وأسعار مختلفة{" "}
+                <span className="font-normal text-muted-foreground">
+                  (اختياري)
+                </span>
               </label>
 
               <button
@@ -896,20 +1595,22 @@ function AdminProductsPage() {
               >
                 + إضافة خيار
               </button>
+
             </div>
 
             {sizeOptions.map(
-              (option, index) => (
+              (s, i) => (
                 <div
-                  key={index}
+                  key={i}
                   className="mb-2 flex gap-2"
                 >
+
                   <input
                     type="text"
-                    value={option.label}
+                    value={s.label}
                     onChange={(e) =>
                       updateSizeOption(
-                        index,
+                        i,
                         "label",
                         e.target.value,
                       )
@@ -921,11 +1622,11 @@ function AdminProductsPage() {
                   <input
                     type="number"
                     value={
-                      option.price || ""
+                      s.price || ""
                     }
                     onChange={(e) =>
                       updateSizeOption(
-                        index,
+                        i,
                         "price",
                         e.target.value,
                       )
@@ -938,38 +1639,42 @@ function AdminProductsPage() {
                     type="button"
                     onClick={() =>
                       removeSizeOption(
-                        index,
+                        i,
                       )
                     }
                     className="text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
+
                 </div>
               ),
             )}
+
           </div>
 
-          {/* الوصف */}
           <div>
+
             <label className="mb-2 block text-sm font-bold">
               الوصف
             </label>
 
             <textarea
-              value={description}
+              value={
+                description
+              }
               onChange={(e) =>
                 setDescription(
                   e.target.value,
                 )
               }
-              rows={5}
+              rows={4}
               placeholder="وصف المنتج وتفاصيله..."
               className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
+
           </div>
 
-          {/* الرسالة */}
           {formMessage && (
             <div
               className={`rounded-lg border px-3 py-2 text-sm ${
@@ -978,62 +1683,68 @@ function AdminProductsPage() {
                   : "border-destructive/40 bg-destructive/10 text-destructive"
               }`}
             >
-              {formMessage.text}
+              {
+                formMessage.text
+              }
             </div>
           )}
 
-          {/* الأزرار */}
           <div className="flex gap-3">
+
             <button
               type="submit"
               disabled={saving}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
-              {editingId ||
-              editingLegacyId ? (
-                <Pencil className="h-4 w-4" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
+              <Plus className="h-4 w-4" />
 
               {saving
                 ? "جارٍ الحفظ..."
-                : editingId ||
-                    editingLegacyId
+                : editingId
                   ? "حفظ التعديلات"
                   : "إضافة المنتج"}
             </button>
 
-            {(editingId ||
-              editingLegacyId) && (
+            {editingId && (
               <button
                 type="button"
-                onClick={resetForm}
+                onClick={
+                  resetForm
+                }
                 className="rounded-lg border border-border px-6 py-3 text-sm font-bold text-muted-foreground hover:border-primary"
               >
                 إلغاء
               </button>
             )}
+
           </div>
+
         </form>
 
-        {/* قائمة المنتجات */}
+        {/* =====================================================
+            جميع المنتجات
+        ===================================================== */}
+
         <div className="mt-10">
 
           <div className="mb-4 flex items-center justify-between">
+
             <div>
               <h2 className="text-lg font-bold">
                 جميع المنتجات
               </h2>
 
               <p className="mt-1 text-xs text-muted-foreground">
-                المنتجات القديمة والجديدة
+                المنتجات القديمة والجديدة معًا
               </p>
             </div>
 
             <span className="rounded-full bg-primary/10 px-3 py-1 text-sm font-bold text-primary">
-              {allAdminProducts.length}
+              {
+                allAdminProducts.length
+              }
             </span>
+
           </div>
 
           {loadingList ? (
@@ -1043,13 +1754,14 @@ function AdminProductsPage() {
           ) : allAdminProducts.length ===
             0 ? (
             <p className="text-sm text-muted-foreground">
-              لا توجد منتجات.
+              لا يوجد منتجات.
             </p>
           ) : (
             <div className="space-y-8">
 
               {categoryOptions.map(
                 (category) => {
+
                   const categoryProducts =
                     allAdminProducts.filter(
                       (p) =>
@@ -1070,9 +1782,13 @@ function AdminProductsPage() {
                         category.slug
                       }
                     >
+
                       <div className="mb-3 flex items-center justify-between">
+
                         <h3 className="text-base font-extrabold">
-                          {category.name}
+                          {
+                            category.name
+                          }
                         </h3>
 
                         <span className="text-xs text-muted-foreground">
@@ -1081,20 +1797,20 @@ function AdminProductsPage() {
                           }{" "}
                           منتج
                         </span>
+
                       </div>
 
                       <div className="grid gap-3 md:grid-cols-2">
 
                         {categoryProducts.map(
-                          (product) => (
+                          (p) => (
                             <div
-                              key={`${product.source}-${product.id || product.legacy_id}`}
+                              key={`${p.source}-${p.id}`}
                               className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
                             >
+
                               <img
-                                src={
-                                  product.image
-                                }
+                                src={p.image}
                                 alt=""
                                 className="h-16 w-16 shrink-0 rounded-lg object-cover"
                               />
@@ -1102,28 +1818,28 @@ function AdminProductsPage() {
                               <div className="min-w-0 flex-1">
 
                                 <div className="truncate text-sm font-bold">
-                                  {
-                                    product.name
-                                  }
+                                  {p.name}
                                 </div>
 
                                 <div className="mt-1 text-xs text-muted-foreground">
-                                  {
-                                    category.name
-                                  }
+                                  {getCategoryName(
+                                    p.category,
+                                  )}
                                 </div>
 
                                 <div className="mt-1">
-                                  {product.source ===
+
+                                  {p.source ===
                                   "legacy" ? (
                                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                                       منتج قديم
                                     </span>
                                   ) : (
                                     <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                                      قاعدة البيانات
+                                      من قاعدة البيانات
                                     </span>
                                   )}
+
                                 </div>
 
                               </div>
@@ -1132,11 +1848,11 @@ function AdminProductsPage() {
                                 type="button"
                                 onClick={() =>
                                   startEdit(
-                                    product,
+                                    p,
                                   )
                                 }
-                                aria-label="تعديل المنتج"
-                                className="rounded-lg p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                                aria-label="تعديل"
+                                className="text-muted-foreground hover:text-primary"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -1145,11 +1861,11 @@ function AdminProductsPage() {
                                 type="button"
                                 onClick={() =>
                                   handleDelete(
-                                    product,
+                                    p,
                                   )
                                 }
-                                aria-label="حذف المنتج"
-                                className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                                aria-label="حذف"
+                                className="text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -1159,6 +1875,7 @@ function AdminProductsPage() {
                         )}
 
                       </div>
+
                     </section>
                   );
                 },
@@ -1166,6 +1883,7 @@ function AdminProductsPage() {
 
             </div>
           )}
+
         </div>
 
       </main>
