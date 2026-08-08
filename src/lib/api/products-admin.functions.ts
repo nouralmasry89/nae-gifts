@@ -37,6 +37,10 @@ const productInput = z.object({
   description: z.string().optional(),
 });
 
+/* =========================================================
+   رفع صورة
+========================================================= */
+
 export const uploadProductImage = createServerFn({
   method: "POST",
 })
@@ -66,13 +70,14 @@ export const uploadProductImage = createServerFn({
       .toString(36)
       .slice(2)}.${ext}`;
 
-    const { error } = await supabaseAdmin.storage
-      .from("products")
-      .upload(path, buffer, {
-        contentType:
-          data.contentType || "image/jpeg",
-        upsert: true,
-      });
+    const { error } =
+      await supabaseAdmin.storage
+        .from("products")
+        .upload(path, buffer, {
+          contentType:
+            data.contentType || "image/jpeg",
+          upsert: true,
+        });
 
     if (error) {
       throw new Error(error.message);
@@ -87,6 +92,10 @@ export const uploadProductImage = createServerFn({
       url: pub.publicUrl,
     };
   });
+
+/* =========================================================
+   حفظ / تعديل منتج
+========================================================= */
 
 export const saveProduct = createServerFn({
   method: "POST",
@@ -110,14 +119,16 @@ export const saveProduct = createServerFn({
       legacy_id: data.legacyId || null,
     };
 
-    /*
-     * تعديل منتج موجود في Supabase
-     */
+    /* ---------------------------------------------------------
+       1. تعديل بواسطة UUID
+    --------------------------------------------------------- */
+
     if (data.id) {
-      const { error } = await supabaseAdmin
-        .from("products")
-        .update(row)
-        .eq("id", data.id);
+      const { error } =
+        await supabaseAdmin
+          .from("products")
+          .update(row)
+          .eq("id", data.id);
 
       if (error) {
         throw new Error(error.message);
@@ -128,17 +139,21 @@ export const saveProduct = createServerFn({
       };
     }
 
-    /*
-     * إذا كان لدينا legacy_id لمنتج قديم،
-     * نبحث عنه أولاً ونعدله بدل إنشاء نسخة مكررة.
-     */
+    /* ---------------------------------------------------------
+       2. تعديل / ترحيل منتج قديم
+    --------------------------------------------------------- */
+
     if (data.legacyId) {
-      const { data: existing } =
+      const { data: existing, error: findError } =
         await supabaseAdmin
           .from("products")
           .select("id")
           .eq("legacy_id", data.legacyId)
           .maybeSingle();
+
+      if (findError) {
+        throw new Error(findError.message);
+      }
 
       if (existing?.id) {
         const { error } =
@@ -155,11 +170,32 @@ export const saveProduct = createServerFn({
           id: existing.id as string,
         };
       }
+
+      /*
+       * لا يوجد المنتج في قاعدة البيانات،
+       * لذلك ننقله إليها.
+       */
+
+      const { data: inserted, error } =
+        await supabaseAdmin
+          .from("products")
+          .insert(row)
+          .select("id")
+          .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return {
+        id: inserted.id as string,
+      };
     }
 
-    /*
-     * إضافة منتج جديد
-     */
+    /* ---------------------------------------------------------
+       3. إضافة منتج جديد
+    --------------------------------------------------------- */
+
     const { data: inserted, error } =
       await supabaseAdmin
         .from("products")
@@ -176,6 +212,10 @@ export const saveProduct = createServerFn({
     };
   });
 
+/* =========================================================
+   حذف منتج
+========================================================= */
+
 export const deleteProduct = createServerFn({
   method: "POST",
 })
@@ -191,9 +231,8 @@ export const deleteProduct = createServerFn({
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    /*
-     * حذف بواسطة UUID
-     */
+    /* حذف بواسطة UUID */
+
     if (data.id) {
       const { error } =
         await supabaseAdmin
@@ -210,9 +249,8 @@ export const deleteProduct = createServerFn({
       };
     }
 
-    /*
-     * حذف بواسطة legacy_id
-     */
+    /* حذف بواسطة legacy_id */
+
     if (data.legacyId) {
       const { error } =
         await supabaseAdmin
@@ -233,6 +271,10 @@ export const deleteProduct = createServerFn({
       "لم يتم تحديد المنتج المراد حذفه.",
     );
   });
+
+/* =========================================================
+   جلب المنتجات من قاعدة البيانات
+========================================================= */
 
 export const listAdminProducts = createServerFn({
   method: "POST",
@@ -261,3 +303,91 @@ export const listAdminProducts = createServerFn({
 
     return rows ?? [];
   });
+
+/* =========================================================
+   ترحيل جميع المنتجات القديمة إلى قاعدة البيانات
+========================================================= */
+
+export const migrateLegacyProducts =
+  createServerFn({
+    method: "POST",
+  })
+    .inputValidator(
+      z.object({
+        password: z.string(),
+        products: z.array(
+          z.object({
+            id: z.string(),
+            categorySlug: z.string(),
+            name: z.string(),
+            image: z.string(),
+            gallery: z.array(z.string()).optional(),
+            priceNew: z.number(),
+            priceOld: z.number(),
+            priceNote: z.string().optional(),
+            sizeOptions: z
+              .array(sizeOptionSchema)
+              .optional(),
+            description: z.string(),
+          }),
+        ),
+      }),
+    )
+    .handler(async ({ data }) => {
+      checkPassword(data.password);
+
+      const supabaseAdmin =
+        getSupabaseAdmin();
+
+      let migrated = 0;
+
+      for (const product of data.products) {
+        const row = {
+          category: product.categorySlug,
+          name: product.name,
+          image: product.image,
+          gallery: product.gallery ?? [],
+          price_new: product.priceNew,
+          price_old: product.priceOld,
+          price_note:
+            product.priceNote || null,
+          size_options:
+            product.sizeOptions ?? [],
+          description:
+            product.description || "",
+          legacy_id: product.id,
+        };
+
+        const { data: existing } =
+          await supabaseAdmin
+            .from("products")
+            .select("id")
+            .eq("legacy_id", product.id)
+            .maybeSingle();
+
+        if (existing?.id) {
+          await supabaseAdmin
+            .from("products")
+            .update(row)
+            .eq("id", existing.id);
+        } else {
+          const { error } =
+            await supabaseAdmin
+              .from("products")
+              .insert(row);
+
+          if (error) {
+            throw new Error(
+              `فشل نقل المنتج "${product.name}": ${error.message}`,
+            );
+          }
+        }
+
+        migrated++;
+      }
+
+      return {
+        ok: true,
+        migrated,
+      };
+    });
