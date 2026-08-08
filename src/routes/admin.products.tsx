@@ -1,6 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Package, Plus, Trash2, Pencil, Upload } from "lucide-react";
+import {
+  Package,
+  Plus,
+  Trash2,
+  Pencil,
+  Upload,
+  X,
+} from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import {
@@ -10,6 +17,7 @@ import {
   uploadProductImage,
 } from "@/lib/api/products-admin.functions";
 import { allProducts } from "@/lib/products";
+import { categories } from "@/lib/categories";
 
 export const Route = createFileRoute("/admin/products")({
   head: () => ({
@@ -18,18 +26,6 @@ export const Route = createFileRoute("/admin/products")({
   component: AdminProductsPage,
 });
 
-const CATEGORY_NAMES: Record<string, string> = {
-  rings: "ستاندات محابس",
-  dowry: "صناديق مهر و هدايا",
-  flowers: "باقات ورد صناعي",
-  birthday: "أعياد الميلاد",
-  graduation: "التخرج",
-  mother: "عيد الأم",
-  newborn: "مواليد",
-  ramadan: "رمضان",
-  teacher: "هدايا المعلمين",
-};
-
 type SizeOption = {
   label: string;
   price: number;
@@ -37,6 +33,7 @@ type SizeOption = {
 
 type AdminProductRow = {
   id: string;
+  legacy_id?: string | null;
   category: string;
   name: string;
   image: string;
@@ -49,10 +46,6 @@ type AdminProductRow = {
   source: "supabase" | "legacy";
 };
 
-function getCategoryName(slug: string): string {
-  return CATEGORY_NAMES[slug] || slug;
-}
-
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -62,7 +55,9 @@ function fileToBase64(file: File): Promise<string> {
       resolve(result.split(",")[1] || "");
     };
 
-    reader.onerror = () => reject(new Error("تعذّرت قراءة الملف"));
+    reader.onerror = () =>
+      reject(new Error("تعذّرت قراءة الملف"));
+
     reader.readAsDataURL(file);
   });
 }
@@ -94,28 +89,36 @@ function AdminProductsPage() {
   const [password, setPassword] = useState("");
   const [unlocked, setUnlocked] = useState(false);
 
-  const [supabaseProducts, setSupabaseProducts] = useState<
-    AdminProductRow[]
-  >([]);
+  const [supabaseProducts, setSupabaseProducts] =
+    useState<AdminProductRow[]>([]);
 
   const [loadingList, setLoadingList] = useState(false);
   const [listError, setListError] = useState("");
 
-  // بيانات الفورم
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [categorySlug, setCategorySlug] = useState("rings");
+  const [editingId, setEditingId] =
+    useState<string | null>(null);
+
+  const [editingLegacyId, setEditingLegacyId] =
+    useState<string | null>(null);
+
+  const [categorySlug, setCategorySlug] =
+    useState("rings");
+
   const [name, setName] = useState("");
   const [priceNew, setPriceNew] = useState("");
   const [priceOld, setPriceOld] = useState("");
   const [priceNote, setPriceNote] = useState("");
-  const [description, setDescription] = useState("");
-  const [sizeOptions, setSizeOptions] = useState<SizeOption[]>([]);
+  const [description, setDescription] =
+    useState("");
+
+  const [sizeOptions, setSizeOptions] =
+    useState<SizeOption[]>([]);
 
   const [mainImageFile, setMainImageFile] =
     useState<File | null>(null);
 
   const [mainImagePreview, setMainImagePreview] =
-    useState<string>("");
+    useState("");
 
   const [galleryFiles, setGalleryFiles] =
     useState<File[]>([]);
@@ -136,9 +139,6 @@ function AdminProductsPage() {
     text: string;
   } | null>(null);
 
-  /*
-   * تحميل المنتجات الموجودة في Supabase
-   */
   const loadProducts = async (pwd: string) => {
     setLoadingList(true);
     setListError("");
@@ -150,7 +150,9 @@ function AdminProductsPage() {
         },
       });
 
-      setSupabaseProducts(rows as AdminProductRow[]);
+      setSupabaseProducts(
+        rows as AdminProductRow[],
+      );
     } catch (err) {
       setListError(
         err instanceof Error
@@ -163,62 +165,82 @@ function AdminProductsPage() {
   };
 
   /*
-   * دمج المنتجات القديمة من products.ts
-   * مع المنتجات الجديدة من Supabase.
+   * تحويل المنتجات القديمة إلى صفوف قابلة
+   * للعرض في لوحة التحكم.
    */
-  const allAdminProducts = useMemo<AdminProductRow[]>(() => {
-    const legacyProducts: AdminProductRow[] =
-      allProducts.map((p) => ({
-        id: `legacy-${p.id}`,
-        category: p.categorySlug,
-        name: p.name,
-        image: p.image,
-        gallery: p.gallery || null,
-        price_new: p.priceNew ?? 0,
-        price_old: p.priceOld ?? 0,
-        price_note: p.priceNote || null,
-        size_options: p.sizeOptions || null,
-        description: p.description || null,
-        source: "legacy",
-      }));
+  const legacyProducts: AdminProductRow[] =
+    allProducts.map((p) => ({
+      id: "",
+      legacy_id: p.id,
+      category: p.categorySlug,
+      name: p.name,
+      image: p.image,
+      gallery: p.gallery || null,
+      price_new: p.priceNew ?? 0,
+      price_old: p.priceOld ?? 0,
+      price_note: p.priceNote || null,
+      size_options: p.sizeOptions || null,
+      description: p.description || null,
+      source: "legacy",
+    }));
 
-    const newProducts: AdminProductRow[] =
+  /*
+   * المنتجات التي أصبحت موجودة في Supabase.
+   *
+   * إذا كان المنتج يحمل legacy_id فهو نسخة
+   * إدارية من منتج قديم، لذلك لا نعرضه مرتين.
+   */
+  const allAdminProducts = useMemo<
+    AdminProductRow[]
+  >(() => {
+    const legacyIds = new Set(
+      supabaseProducts
+        .map((p) => p.legacy_id)
+        .filter(Boolean),
+    );
+
+    const oldProducts = legacyProducts.filter(
+      (p) => !legacyIds.has(p.legacy_id),
+    );
+
+    const newProducts =
       supabaseProducts.map((p) => ({
         ...p,
-        source: "supabase",
+        source: "supabase" as const,
       }));
 
-    return [...legacyProducts, ...newProducts];
+    return [...oldProducts, ...newProducts];
   }, [supabaseProducts]);
 
   /*
-   * الأقسام الموجودة فعليًا في المنتجات القديمة والجديدة.
+   * جميع الأقسام الموجودة في categories.ts
+   * وليس فقط الأقسام التي لديها منتجات.
    */
   const categoryOptions = useMemo(() => {
-    const slugs = Array.from(
-      new Set(
-        allAdminProducts
-          .map((p) => p.category)
-          .filter(Boolean),
-      ),
-    );
-
-    return slugs.map((slug) => ({
-      slug,
-      name: getCategoryName(slug),
+    return categories.map((category) => ({
+      slug: category.slug,
+      name: category.name,
     }));
-  }, [allAdminProducts]);
+  }, []);
 
-  const handleUnlock = async (e: React.FormEvent) => {
+  const handleUnlock = async (
+    e: React.FormEvent,
+  ) => {
     e.preventDefault();
 
-    await loadProducts(password);
+    if (!password.trim()) {
+      setListError("أدخل كلمة السر الإدارية.");
+      return;
+    }
 
+    await loadProducts(password);
     setUnlocked(true);
   };
 
   const resetForm = () => {
     setEditingId(null);
+    setEditingLegacyId(null);
+
     setCategorySlug("rings");
     setName("");
     setPriceNew("");
@@ -226,50 +248,65 @@ function AdminProductsPage() {
     setPriceNote("");
     setDescription("");
     setSizeOptions([]);
+
     setMainImageFile(null);
     setMainImagePreview("");
+
     setGalleryFiles([]);
     setGalleryPreviews([]);
+
     setExistingImageUrl("");
     setExistingGallery([]);
+
     setFormMessage(null);
   };
 
-  const startEdit = (p: AdminProductRow) => {
-    /*
-     * المنتجات القديمة ما زالت مرتبطة بملف products.ts.
-     * سيتم تفعيل تعديلها في الخطوة التالية بعد نقلها
-     * بشكل آمن إلى Supabase.
-     */
-    if (p.source === "legacy") {
-      alert(
-        "هذا المنتج من المنتجات القديمة. سنفعّل تعديله وحذفه من لوحة التحكم في الخطوة التالية بعد نقل بياناته إلى قاعدة البيانات."
-      );
-      return;
-    }
+  const startEdit = (
+    p: AdminProductRow,
+  ) => {
+    setEditingId(
+      p.source === "supabase"
+        ? p.id
+        : null,
+    );
 
-    setEditingId(p.id);
+    setEditingLegacyId(
+      p.source === "legacy"
+        ? p.legacy_id || null
+        : p.legacy_id || null,
+    );
+
     setCategorySlug(p.category);
     setName(p.name);
+
     setPriceNew(
-      p.price_new !== null && p.price_new !== undefined
+      p.price_new !== null &&
+        p.price_new !== undefined
         ? String(p.price_new)
         : "",
     );
+
     setPriceOld(
-      p.price_old !== null && p.price_old !== undefined
+      p.price_old !== null &&
+        p.price_old !== undefined
         ? String(p.price_old)
         : "",
     );
+
     setPriceNote(p.price_note || "");
     setDescription(p.description || "");
+
     setSizeOptions(p.size_options || []);
+
     setExistingImageUrl(p.image);
     setExistingGallery(p.gallery || []);
+
     setMainImageFile(null);
     setMainImagePreview("");
+
     setGalleryFiles([]);
     setGalleryPreviews([]);
+
     setFormMessage(null);
 
     window.scrollTo({
@@ -286,6 +323,7 @@ function AdminProductsPage() {
     if (!file) return;
 
     setMainImageFile(file);
+
     setMainImagePreview(
       URL.createObjectURL(file),
     );
@@ -335,7 +373,9 @@ function AdminProductsPage() {
     setSizeOptions(copy);
   };
 
-  const removeSizeOption = (i: number) => {
+  const removeSizeOption = (
+    i: number,
+  ) => {
     setSizeOptions(
       sizeOptions.filter(
         (_, idx) => idx !== i,
@@ -347,6 +387,14 @@ function AdminProductsPage() {
     e: React.FormEvent,
   ) => {
     e.preventDefault();
+
+    if (!name.trim()) {
+      setFormMessage({
+        ok: false,
+        text: "يرجى إدخال اسم المنتج.",
+      });
+      return;
+    }
 
     setSaving(true);
     setFormMessage(null);
@@ -376,8 +424,8 @@ function AdminProductsPage() {
 
       if (galleryFiles.length > 0) {
         gallery = await Promise.all(
-          galleryFiles.map((f) =>
-            uploadImage(f, password),
+          galleryFiles.map((file) =>
+            uploadImage(file, password),
           ),
         );
       }
@@ -385,21 +433,39 @@ function AdminProductsPage() {
       const res = await saveProduct({
         data: {
           password,
-          id: editingId || undefined,
+
+          id:
+            editingId ||
+            undefined,
+
+          legacyId:
+            editingLegacyId ||
+            undefined,
+
           categorySlug,
+
           name: name.trim(),
+
           imageUrl,
+
           gallery,
+
           priceNew:
             Number(priceNew) || 0,
+
           priceOld:
             Number(priceOld) || 0,
+
           priceNote:
-            priceNote.trim() || undefined,
+            priceNote.trim() ||
+            undefined,
+
           sizeOptions:
             sizeOptions.filter(
-              (s) => s.label.trim(),
+              (s) =>
+                s.label.trim() !== "",
             ),
+
           description:
             description.trim(),
         },
@@ -407,9 +473,10 @@ function AdminProductsPage() {
 
       setFormMessage({
         ok: true,
-        text: editingId
-          ? "تم تحديث المنتج ✅"
-          : `تم إضافة المنتج ✅ (المعرّف: ${res.id})`,
+        text: editingId ||
+          editingLegacyId
+          ? "تم تحديث المنتج بنجاح ✅"
+          : `تم إضافة المنتج بنجاح ✅`,
       });
 
       resetForm();
@@ -431,27 +498,29 @@ function AdminProductsPage() {
   const handleDelete = async (
     p: AdminProductRow,
   ) => {
-    if (p.source === "legacy") {
-      alert(
-        "هذا المنتج من المنتجات القديمة. سنفعّل حذفه من لوحة التحكم في الخطوة التالية بعد نقل بياناته إلى قاعدة البيانات."
-      );
-      return;
-    }
+    const isLegacy =
+      p.source === "legacy";
 
-    if (
-      !confirm(
-        "متأكد من حذف هذا المنتج؟ لا يمكن التراجع.",
-      )
-    ) {
+    const message = isLegacy
+      ? `سيتم حذف نسخة المنتج "${p.name}" من لوحة الإدارة/قاعدة البيانات إن كانت موجودة. المنتج الأصلي في الموقع لن يتم حذفه. هل تريد المتابعة؟`
+      : `هل أنت متأكد من حذف المنتج "${p.name}"؟ لا يمكن التراجع عن هذا الإجراء.`;
+
+    if (!confirm(message)) {
       return;
     }
 
     try {
       await deleteProduct({
-        data: {
-          password,
-          id: p.id,
-        },
+        data: isLegacy
+          ? {
+              password,
+              legacyId:
+                p.legacy_id || undefined,
+            }
+          : {
+              password,
+              id: p.id,
+            },
       });
 
       await loadProducts(password);
@@ -472,8 +541,8 @@ function AdminProductsPage() {
         );
       }
 
-      galleryPreviews.forEach((u) => {
-        URL.revokeObjectURL(u);
+      galleryPreviews.forEach((url) => {
+        URL.revokeObjectURL(url);
       });
     };
 
@@ -542,7 +611,8 @@ function AdminProductsPage() {
     <div className="min-h-screen">
       <Header />
 
-      <main className="mx-auto max-w-4xl px-4 py-10">
+      <main className="mx-auto max-w-5xl px-4 py-10">
+
         {/* العنوان والإحصائيات */}
         <div className="mb-6">
           <div className="flex items-center gap-2">
@@ -554,6 +624,7 @@ function AdminProductsPage() {
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+
             <div className="rounded-xl border border-border bg-card p-4">
               <div className="text-2xl font-extrabold">
                 {allAdminProducts.length}
@@ -580,7 +651,7 @@ function AdminProductsPage() {
               </div>
 
               <div className="mt-1 text-xs text-muted-foreground">
-                المنتجات الجديدة
+                في قاعدة البيانات
               </div>
             </div>
 
@@ -593,20 +664,35 @@ function AdminProductsPage() {
                 الأقسام
               </div>
             </div>
+
           </div>
         </div>
 
-        {/* فورم الإضافة / التعديل */}
+        {/* نموذج المنتج */}
         <form
           onSubmit={handleSave}
-          className="space-y-4 rounded-xl border border-border bg-card p-5"
+          className="space-y-5 rounded-xl border border-border bg-card p-5"
         >
-          <h2 className="text-lg font-bold">
-            {editingId
-              ? "تعديل منتج"
-              : "إضافة منتج جديد"}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold">
+              {editingId || editingLegacyId
+                ? "تعديل المنتج"
+                : "إضافة منتج جديد"}
+            </h2>
 
+            {(editingId ||
+              editingLegacyId) && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+
+          {/* القسم */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               القسم
@@ -621,17 +707,20 @@ function AdminProductsPage() {
               }
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             >
-              {categoryOptions.map((c) => (
-                <option
-                  key={c.slug}
-                  value={c.slug}
-                >
-                  {c.name}
-                </option>
-              ))}
+              {categoryOptions.map(
+                (category) => (
+                  <option
+                    key={category.slug}
+                    value={category.slug}
+                  >
+                    {category.name}
+                  </option>
+                ),
+              )}
             </select>
           </div>
 
+          {/* الاسم */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               اسم المنتج
@@ -648,6 +737,7 @@ function AdminProductsPage() {
             />
           </div>
 
+          {/* الصورة الرئيسية */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               الصورة الرئيسية
@@ -661,13 +751,12 @@ function AdminProductsPage() {
                   existingImageUrl
                 }
                 alt=""
-                className="mb-2 h-32 w-32 rounded-lg border border-border object-cover"
+                className="mb-3 h-32 w-32 rounded-lg border border-border object-cover"
               />
             )}
 
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary">
               <Upload className="h-4 w-4" />
-
               اختر صورة
 
               <input
@@ -681,24 +770,24 @@ function AdminProductsPage() {
             </label>
           </div>
 
+          {/* المعرض */}
           <div>
             <label className="mb-2 block text-sm font-bold">
-              صور معاينة إضافية (اختياري)
+              صور إضافية
             </label>
 
             {(galleryPreviews.length >
               0 ||
               existingGallery.length >
                 0) && (
-              <div className="mb-2 flex flex-wrap gap-2">
-                {(
-                  galleryPreviews.length >
-                  0
-                    ? galleryPreviews
-                    : existingGallery
-                ).map((src, i) => (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {(galleryPreviews.length >
+                0
+                  ? galleryPreviews
+                  : existingGallery
+                ).map((src, index) => (
                   <img
-                    key={i}
+                    key={index}
                     src={src}
                     alt=""
                     className="h-16 w-16 rounded-lg border border-border object-cover"
@@ -709,7 +798,6 @@ function AdminProductsPage() {
 
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-bold hover:border-primary">
               <Upload className="h-4 w-4" />
-
               اختر عدة صور
 
               <input
@@ -724,14 +812,16 @@ function AdminProductsPage() {
             </label>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              اختيار صور جديدة سيستبدل القديمة بالكامل.
+              عند اختيار صور جديدة سيتم استبدال صور المعرض القديمة.
             </p>
           </div>
 
+          {/* الأسعار */}
           <div className="grid gap-4 md:grid-cols-2">
+
             <div>
               <label className="mb-2 block text-sm font-bold">
-                السعر (ليرة جديدة)
+                السعر — ليرة جديدة
               </label>
 
               <input
@@ -749,7 +839,7 @@ function AdminProductsPage() {
 
             <div>
               <label className="mb-2 block text-sm font-bold">
-                السعر (ليرة قديمة)
+                السعر — ليرة قديمة
               </label>
 
               <input
@@ -764,11 +854,13 @@ function AdminProductsPage() {
                 className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
               />
             </div>
+
           </div>
 
+          {/* ملاحظة السعر */}
           <div>
             <label className="mb-2 block text-sm font-bold">
-              ملاحظة سعر بديلة{" "}
+              ملاحظة السعر{" "}
               <span className="font-normal text-muted-foreground">
                 (اختياري)
               </span>
@@ -782,18 +874,16 @@ function AdminProductsPage() {
                   e.target.value,
                 )
               }
-              placeholder="مثال: من 2,000 إلى 3,500 ل.س جديدة حسب الحجم"
+              placeholder="مثال: من 2,000 إلى 3,500 ل.س حسب الحجم"
               className="w-full rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
           </div>
 
+          {/* الأحجام */}
           <div>
             <div className="mb-2 flex items-center justify-between">
               <label className="text-sm font-bold">
-                خيارات أحجام وأسعار مختلفة{" "}
-                <span className="font-normal text-muted-foreground">
-                  (اختياري)
-                </span>
+                خيارات الأحجام والأسعار
               </label>
 
               <button
@@ -808,17 +898,17 @@ function AdminProductsPage() {
             </div>
 
             {sizeOptions.map(
-              (s, i) => (
+              (option, index) => (
                 <div
-                  key={i}
+                  key={index}
                   className="mb-2 flex gap-2"
                 >
                   <input
                     type="text"
-                    value={s.label}
+                    value={option.label}
                     onChange={(e) =>
                       updateSizeOption(
-                        i,
+                        index,
                         "label",
                         e.target.value,
                       )
@@ -830,11 +920,11 @@ function AdminProductsPage() {
                   <input
                     type="number"
                     value={
-                      s.price || ""
+                      option.price || ""
                     }
                     onChange={(e) =>
                       updateSizeOption(
-                        i,
+                        index,
                         "price",
                         e.target.value,
                       )
@@ -847,7 +937,7 @@ function AdminProductsPage() {
                     type="button"
                     onClick={() =>
                       removeSizeOption(
-                        i,
+                        index,
                       )
                     }
                     className="text-destructive"
@@ -859,6 +949,7 @@ function AdminProductsPage() {
             )}
           </div>
 
+          {/* الوصف */}
           <div>
             <label className="mb-2 block text-sm font-bold">
               الوصف
@@ -871,12 +962,13 @@ function AdminProductsPage() {
                   e.target.value,
                 )
               }
-              rows={4}
+              rows={5}
               placeholder="وصف المنتج وتفاصيله..."
               className="w-full resize-none rounded-lg border border-border bg-background px-4 py-3 text-sm outline-none focus:border-primary"
             />
           </div>
 
+          {/* الرسالة */}
           {formMessage && (
             <div
               className={`rounded-lg border px-3 py-2 text-sm ${
@@ -889,22 +981,30 @@ function AdminProductsPage() {
             </div>
           )}
 
+          {/* الأزرار */}
           <div className="flex gap-3">
             <button
               type="submit"
               disabled={saving}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-base font-bold text-primary-foreground hover:opacity-90 disabled:opacity-60"
             >
-              <Plus className="h-4 w-4" />
+              {editingId ||
+              editingLegacyId ? (
+                <Pencil className="h-4 w-4" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
 
               {saving
                 ? "جارٍ الحفظ..."
-                : editingId
+                : editingId ||
+                    editingLegacyId
                   ? "حفظ التعديلات"
                   : "إضافة المنتج"}
             </button>
 
-            {editingId && (
+            {(editingId ||
+              editingLegacyId) && (
               <button
                 type="button"
                 onClick={resetForm}
@@ -916,8 +1016,9 @@ function AdminProductsPage() {
           </div>
         </form>
 
-        {/* جميع المنتجات */}
+        {/* قائمة المنتجات */}
         <div className="mt-10">
+
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold">
@@ -925,7 +1026,7 @@ function AdminProductsPage() {
               </h2>
 
               <p className="mt-1 text-xs text-muted-foreground">
-                المنتجات القديمة والجديدة معًا
+                المنتجات القديمة والجديدة
               </p>
             </div>
 
@@ -941,10 +1042,11 @@ function AdminProductsPage() {
           ) : allAdminProducts.length ===
             0 ? (
             <p className="text-sm text-muted-foreground">
-              لا يوجد منتجات.
+              لا توجد منتجات.
             </p>
           ) : (
             <div className="space-y-8">
+
               {categoryOptions.map(
                 (category) => {
                   const categoryProducts =
@@ -981,77 +1083,90 @@ function AdminProductsPage() {
                       </div>
 
                       <div className="grid gap-3 md:grid-cols-2">
+
                         {categoryProducts.map(
-                          (p) => (
+                          (product) => (
                             <div
-                              key={`${p.source}-${p.id}`}
+                              key={`${product.source}-${product.id || product.legacy_id}`}
                               className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
                             >
                               <img
-                                src={p.image}
+                                src={
+                                  product.image
+                                }
                                 alt=""
                                 className="h-16 w-16 shrink-0 rounded-lg object-cover"
                               />
 
                               <div className="min-w-0 flex-1">
+
                                 <div className="truncate text-sm font-bold">
-                                  {p.name}
+                                  {
+                                    product.name
+                                  }
                                 </div>
 
                                 <div className="mt-1 text-xs text-muted-foreground">
-                                  {getCategoryName(
-                                    p.category,
-                                  )}
+                                  {
+                                    category.name
+                                  }
                                 </div>
 
                                 <div className="mt-1">
-                                  {p.source ===
+                                  {product.source ===
                                   "legacy" ? (
                                     <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
                                       منتج قديم
                                     </span>
                                   ) : (
                                     <span className="inline-flex rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-                                      من قاعدة البيانات
+                                      قاعدة البيانات
                                     </span>
                                   )}
                                 </div>
+
                               </div>
 
                               <button
+                                type="button"
                                 onClick={() =>
                                   startEdit(
-                                    p,
+                                    product,
                                   )
                                 }
-                                aria-label="تعديل"
-                                className="text-muted-foreground hover:text-primary"
+                                aria-label="تعديل المنتج"
+                                className="rounded-lg p-2 text-muted-foreground hover:bg-primary/10 hover:text-primary"
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
 
                               <button
+                                type="button"
                                 onClick={() =>
                                   handleDelete(
-                                    p,
+                                    product,
                                   )
                                 }
-                                aria-label="حذف"
-                                className="text-muted-foreground hover:text-destructive"
+                                aria-label="حذف المنتج"
+                                className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
+
                             </div>
                           ),
                         )}
+
                       </div>
                     </section>
                   );
                 },
               )}
+
             </div>
           )}
         </div>
+
       </main>
 
       <Footer />
